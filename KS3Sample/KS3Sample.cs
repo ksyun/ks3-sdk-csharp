@@ -20,10 +20,8 @@ namespace KS3Sample
 {
     class KS3Sample
     {
-        //static String accessKey = "YOUR ACCESS KEY";
-        //static String secretKey = "YOUR SECRET KEY";
-		static String accessKey = "25CJISLBDDGJ6NDPBM2Q";
-		static String secretKey = "jwcbCqnhynOeNrBmhGg8pUzp8VHlukPocazXoqKK";
+        static String accessKey = "YOUR ACCESS KEY";
+        static String secretKey = "YOUR SECRET KEY";
 
 		// KS3 Operation class 
 		static KS3Client ks3client = null;
