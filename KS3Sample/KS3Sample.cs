@@ -20,8 +20,10 @@ namespace KS3Sample
 {
     class KS3Sample
     {
-        static String accessKey = "YOUR ACCESS KEY";
-        static String secretKey = "YOUR SECRET KEY";
+        //static String accessKey = "YOUR ACCESS KEY";
+        //static String secretKey = "YOUR SECRET KEY";
+		static String accessKey = "25CJISLBDDGJ6NDPBM2Q";
+		static String secretKey = "jwcbCqnhynOeNrBmhGg8pUzp8VHlukPocazXoqKK";
 
 		// KS3 Operation class 
 		static KS3Client ks3client = null;
@@ -30,7 +32,6 @@ namespace KS3Sample
 		static String objKeyNameMemoryData	= "short-content";
 		static String objKeyNameFileData	= "file-data";
 
-		//static String filePath = "A FILE PATH IN YOUR COMPUTER"; // It is used when we upload a file.
 		static String inFilePath  = "C:/test.in.data";
 		static String outFilePath = "C:/test.out.data";
 
@@ -38,7 +39,7 @@ namespace KS3Sample
 		static void Main(string[] args)
         {
 			if (! init())
-				return;			// init failed 
+				return;		// init failed 
 
             Console.WriteLine("========== Begin ==========\n");
 			
