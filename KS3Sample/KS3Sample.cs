@@ -30,8 +30,8 @@ namespace KS3Sample
 		static String objKeyNameMemoryData	= "short-content";
 		static String objKeyNameFileData	= "file-data";
 
-		static String inFilePath  = "C:/test.in.data";
-		static String outFilePath = "C:/test.out.data";
+		static String inFilePath  = "D:/test.in.data";
+		static String outFilePath = "D:/test.out.data";
 
 
 		static void Main(string[] args)
@@ -50,8 +50,9 @@ namespace KS3Sample
 			getObject();
 			deleteObject();
 			deleteBucket();
+            catchKS3Exception();
 
-			Console.WriteLine("\n========== End ==========");
+			Console.WriteLine("\n==========  End  ==========");
 		}
 
 		private static bool init()
@@ -92,13 +93,15 @@ namespace KS3Sample
 		private static bool createBucket()
 		{
             // Create Bucket
-            Console.WriteLine("--- Create Bucket : %s---", bucketName);
 			try
 			{
+                Console.WriteLine("--- Create Bucket: ---");
+                Console.WriteLine("Bucket Name: " + bucketName);
+
 				Bucket bucket = ks3client.createBucket(bucketName);
 
-				Console.WriteLine("Created Bucket Name: " + bucket.getName());
-				Console.WriteLine("-----------------------\n");
+				Console.WriteLine("Success.");
+				Console.WriteLine("----------------------\n");
 			}
 			catch (System.Exception e)
 			{
@@ -114,7 +117,7 @@ namespace KS3Sample
             // List Buckets
 			try
 			{
-				Console.WriteLine("--- List buckets: ---");
+				Console.WriteLine("--- List Buckets: ---");
 
 				List<Bucket> bucketsList = ks3client.listBuckets();
 				foreach (Bucket b in bucketsList)
@@ -180,9 +183,9 @@ namespace KS3Sample
 
 		private static bool putObject()
 		{
-			// Put Object(upload a short content)
 			try
             {
+                // Put Object(upload a short content)
 				Console.WriteLine("--- Upload a Short Content: ---");
 
 				String sampleContent = "This is a sample content.(25 characters before, included the 4 spaces)";
@@ -230,6 +233,7 @@ namespace KS3Sample
 
 				ObjectMetadata objMeta = ks3client.getObjectMetadata(bucketName, objKeyNameMemoryData); 
 				Console.WriteLine(objMeta.ToString());
+                Console.WriteLine();
 				objMeta = ks3client.getObjectMetadata(bucketName, objKeyNameFileData);
 				Console.WriteLine(objMeta.ToString());
 				
@@ -246,9 +250,9 @@ namespace KS3Sample
 
 		private static bool getObject()
 		{
-			// Get Object(download and store in memory)
 			try
 			{
+                // Get Object(download and store in memory)
 				Console.WriteLine("--- Download and Store in Memory ---");
 				
 				GetObjectRequest getShortContent = new GetObjectRequest(bucketName, objKeyNameMemoryData);
@@ -271,6 +275,7 @@ namespace KS3Sample
 
 			try
 			{
+                // Get Object(download and save as a file)
 				Console.WriteLine("--- Download a File ---");
 
 				// I need to get the Content-Length to set the listener.
@@ -282,7 +287,7 @@ namespace KS3Sample
 				KS3Object obj = ks3client.getObject(getObjectRequest);
 				obj.getObjectContent().Close(); // The file was opened in [KS3ObjectResponseHandler], so I close it first. 
 				
-				Console.WriteLine("Success. See the file downloaded at %s", outFilePath);
+				Console.WriteLine("Success. See the file downloaded at {0}", outFilePath);
 				Console.WriteLine("-----------------------\n");
 			}
 			catch (System.Exception e)
@@ -300,8 +305,10 @@ namespace KS3Sample
 			try
 			{
 				Console.WriteLine("--- Delete Object: ---");
+
 				ks3client.deleteObject(bucketName, objKeyNameMemoryData);
 				ks3client.deleteObject(bucketName, objKeyNameFileData);
+
 				Console.WriteLine("Delete Object completed.");
 				Console.WriteLine("---------------------\n");
 			}
@@ -316,23 +323,50 @@ namespace KS3Sample
 
 		private static bool deleteBucket()
 		{
-            // A Simple KS3Exception
+            // Delete Bucket
+            try
+            {
+                Console.WriteLine("--- Delete Bucket: ---");
+
+                ks3client.deleteBucket(bucketName);
+                
+                Console.WriteLine("Delete Bucket completed.");
+				Console.WriteLine("----------------------\n");
+			}
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.ToString());
+				return false;
+            }
+			return true;
+        }
+
+        private static bool catchKS3Exception()
+        {
+            // This is a sample of catch KS3Exception.
             // You can catch the KS3Exception when some illegal operations appear.
             // But note that, if we have done some illegal operations, there also may appear some other unexcepted exceptions too.
             // Now we will see a KS3Excetpion because will try to delete a bucket that does not exist.
             try
             {
                 Console.WriteLine("--- Delete Bucket: ---");
+
                 ks3client.deleteBucket(bucketName);
-				Console.WriteLine("----------------------\n");
-			}
+
+                Console.WriteLine("----------------------\n");
+            }
             catch (KS3Exception e)
             {
                 Console.WriteLine(e.ToString());
-				return false;
+                return false;
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                return false;
             }
 
-			return true;
+            return true;
         }
     }
 
