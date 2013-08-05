@@ -1,4 +1,4 @@
 ks3-sdk-csharp
 ==============
 
-Kingsoft Standard Storage Service SDK for CSharp
+金山云标准存储服务开发SDK，C#语言版本。
