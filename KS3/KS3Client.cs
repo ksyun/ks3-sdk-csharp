@@ -173,6 +173,14 @@ namespace KS3
         /**
          * Sets the AccessControlList for the specified KS3 bucket.
          */
+        public void setBucketAcl(String bucketName, AccessControlList acl)
+        {
+            this.setBucketAcl(new SetBucketAclRequest(bucketName, acl));
+        }
+
+        /**
+         * Sets the AccessControlList for the specified KS3 bucket.
+         */
         public void setBucketAcl(String bucketName, CannedAccessControlList cannedAcl)
         {
             this.setBucketAcl(new SetBucketAclRequest(bucketName, cannedAcl));

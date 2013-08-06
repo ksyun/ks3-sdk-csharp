@@ -53,6 +53,11 @@ namespace KS3
         /**
          * Sets the AccessControlList for the specified KS3 bucket.
          */
+        void setBucketAcl(String bucketName, AccessControlList cannedAcl);
+
+        /**
+         * Sets the AccessControlList for the specified KS3 bucket.
+         */
         void setBucketAcl(String bucketName, CannedAccessControlList cannedAcl);
 
         /**

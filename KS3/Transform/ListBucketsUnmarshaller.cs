@@ -12,21 +12,16 @@ namespace KS3.Transform
 {
     public class ListBucketsUnmarshaller : Unmarshaller<List<Bucket>, Stream>
     {
-        private Owner bucketsOwner = null;
-        private Bucket curBucket = null;
-        private StringBuilder curText = null;
-
-        private List<Bucket> buckets = null;
-
-        public ListBucketsUnmarshaller()
-        {
-            this.buckets = new List<Bucket>();
-            this.curText = new StringBuilder();
-        }
-
         public List<Bucket> unmarshall(Stream inputStream)
         {
             //Console.WriteLine((new StreamReader(inputStream)).ReadToEnd());
+            //return null;
+
+            Owner bucketsOwner = null;
+            Bucket curBucket = null;
+            StringBuilder curText = new StringBuilder();
+            List<Bucket> buckets = new List<Bucket>();
+            
             XmlReader xr = XmlReader.Create(new BufferedStream(UnmarshallerUtils.sanitizeXmlDocument(inputStream)));
             while (xr.Read())
             {
