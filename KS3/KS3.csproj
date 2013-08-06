@@ -79,6 +79,8 @@
     <Compile Include="Model\GetBucketAclRequest.cs" />
     <Compile Include="Model\GetObjectMetadataRequest.cs" />
     <Compile Include="Model\GetObjectRequest.cs" />
+    <Compile Include="Model\Grant.cs" />
+    <Compile Include="Model\Grantee.cs" />
     <Compile Include="Model\KS3Object.cs" />
     <Compile Include="Model\KS3ObjectSummary.cs" />
     <Compile Include="Model\KS3Request.cs" />
@@ -87,6 +89,7 @@
     <Compile Include="Model\ObjectListing.cs" />
     <Compile Include="Model\ObjectMetadata.cs" />
     <Compile Include="Model\Owner.cs" />
+    <Compile Include="Model\Permission.cs" />
     <Compile Include="Model\ProgressEvent.cs" />
     <Compile Include="Model\ProgressListener.cs" />
     <Compile Include="Model\PutObjectRequest.cs" />
@@ -94,7 +97,7 @@
     <Compile Include="Model\SetBucketAclRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Request.cs" />
-    <Compile Include="Transform\CannedAccessControlListUnmarshaller.cs" />
+    <Compile Include="Transform\AccessControlListUnmarshaller.cs" />
     <Compile Include="Transform\ErrorResponseUnmarshaller.cs" />
     <Compile Include="Transform\ListBucketsUnmarshaller.cs" />
     <Compile Include="Transform\ListObjectsUnmarshallers.cs" />

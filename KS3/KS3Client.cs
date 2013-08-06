@@ -126,7 +126,7 @@ namespace KS3
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        public CannedAccessControlList getBucketAcl(String bucketName)
+        public AccessControlList getBucketAcl(String bucketName)
         {
             return getBucketAcl(new GetBucketAclRequest(bucketName));
         }
@@ -134,14 +134,14 @@ namespace KS3
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        public CannedAccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest)
+        public AccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest)
         {
             String bucketName = getBucketAclRequest.getBucketName();
 
             Request<GetBucketAclRequest> request = createRequest(bucketName, null, getBucketAclRequest, HttpMethodName.GET);
             request.addParameter("acl", null);
 
-            return invoke(request, new CannedAccessControlListUnmarshaller(), bucketName, null);
+            return invoke(request, new AccessControlListUnmarshaller(), bucketName, null);
         }
 
         /**

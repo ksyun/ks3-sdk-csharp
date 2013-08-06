@@ -33,12 +33,12 @@ namespace KS3
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        CannedAccessControlList getBucketAcl(String bucketName);
+        AccessControlList getBucketAcl(String bucketName);
 
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        CannedAccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest);
+        AccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest);
 
         /**
          * Creates a new KS3 bucket. 

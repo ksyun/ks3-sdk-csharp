@@ -20,8 +20,10 @@ namespace KS3Sample
 {
     class KS3Sample
     {
-        static String accessKey = "YOUR ACCESS KEY";
-        static String secretKey = "YOUR SECRET KEY";
+        //static String accessKey = "YOUR ACCESS KEY";
+        //static String secretKey = "YOUR SECRET KEY";
+        static String accessKey = "25CJISLBDDGJ6NDPBM2Q";
+        static String secretKey = "jwcbCqnhynOeNrBmhGg8pUzp8VHlukPocazXoqKK";
 
 		// KS3 Operation class 
 		static KS3Client ks3client = null;
@@ -36,23 +38,31 @@ namespace KS3Sample
 
 		static void Main(string[] args)
         {
-			if (! init())
-				return;		// init failed 
+            //if (! init())
+            //    return;		// init failed 
 
-            Console.WriteLine("========== Begin ==========\n");
+            //Console.WriteLine("========== Begin ==========\n");
 			
-			createBucket();
-			listBuckets();
-			getBucketACL();
-			setBucketACL();
-			putObject();
-			listObjects();
-			getObject();
-			deleteObject();
-			deleteBucket();
-            catchKS3Exception();
+            //createBucket();
+            //listBuckets();
+            //getBucketACL();
+            //setBucketACL();
+            //putObject();
+            //listObjects();
+            //getObject();
+            //deleteObject();
+            //deleteBucket();
+            //catchKS3Exception();
 
-			Console.WriteLine("\n==========  End  ==========");
+            //Console.WriteLine("\n==========  End  ==========");
+
+
+
+            KS3Client ks3 = new KS3Client(new BasicKS3Credentials(accessKey, secretKey));
+
+            Console.WriteLine(ks3.getBucketAcl("wangyubin"));
+
+
 		}
 
 		private static bool init()
@@ -143,8 +153,8 @@ namespace KS3Sample
 			{
 				Console.WriteLine("--- Get Bucket ACL: ---");
             
-				CannedAccessControlList cacl = ks3client.getBucketAcl(bucketName);
-				Console.WriteLine(cacl.ToString());
+			    AccessControlList acl = ks3client.getBucketAcl(bucketName);
+				Console.WriteLine(acl.ToString());
 
 				Console.WriteLine("-----------------------\n");
 			}
