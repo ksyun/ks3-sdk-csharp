@@ -159,7 +159,7 @@ namespace KS3
         {
             String bucketName = createBucketRequest.getBucketName();
 
-            Request<CreateBucketRequest> request = createRequest(bucketName, null, createBucketRequest, HttpMethodName.PUT);
+            Request<CreateBucketRequest> request = this.createRequest(bucketName, null, createBucketRequest, HttpMethodName.PUT);
             request.getHeaders()[Headers.CONTENT_LENGTH] = "0";
             
             if (createBucketRequest.getCannedAcl() != null)
@@ -201,11 +201,7 @@ namespace KS3
             {
                 String xml = new AclXmlFactory().convertToXmlString(acl);
                 MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
-
-
-                Console.WriteLine(xml);
-
-
+                
                 request.setContent(memoryStream);
                 request.addHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
             }
@@ -214,7 +210,7 @@ namespace KS3
                 request.addHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
                 request.addHeader(Headers.CONTENT_LENGTH, "0");
             }
-            //request.addParameter("acl", null);
+            request.addParameter("acl", null);
 
             this.invoke(request, this.voidResponseHandler, bucketName, null);
         }
@@ -484,6 +480,79 @@ namespace KS3
 
             return result;
         }
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        public AccessControlList getObjectAcl(String bucketName, String key)
+        {
+            return this.getObjectAcl(new GetObjectAclRequest(bucketName, key));
+        }
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        public AccessControlList getObjectAcl(GetObjectAclRequest getObjectAclRequest)
+        {
+            String bucketName = getObjectAclRequest.getBucketName();
+            String key = getObjectAclRequest.getKey();
+
+            Request<GetObjectAclRequest> request = this.createRequest(bucketName, key, getObjectAclRequest, HttpMethodName.GET);
+            request.addParameter("acl", null);
+
+            return invoke(request, new AccessControlListUnmarshaller(), bucketName, key);
+        }
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        public void setObjectAcl(String bucketName, String key, AccessControlList acl)
+        {
+            this.setObjectAcl(new SetObjectAclRequest(bucketName, key, acl));
+        }
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        public void setObjectAcl(String bucketName, String key, CannedAccessControlList cannedAcl)
+        {
+            this.setObjectAcl(new SetObjectAclRequest(bucketName, key, cannedAcl));
+        }
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        public void setObjectAcl(SetObjectAclRequest setObjectAclRequest)
+        {
+            String bucketName = setObjectAclRequest.getBucketName();
+            String key = setObjectAclRequest.getKey();
+            AccessControlList acl = setObjectAclRequest.getAcl();
+            CannedAccessControlList cannedAcl = setObjectAclRequest.getCannedAcl();
+
+            Request<SetObjectAclRequest> request = this.createRequest(bucketName, key, setObjectAclRequest, HttpMethodName.PUT);
+
+            if (acl != null)
+            {
+                String xml = new AclXmlFactory().convertToXmlString(acl);
+                MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+
+                request.setContent(memoryStream);
+                request.addHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
+            }
+            else if (cannedAcl != null)
+            {
+                request.addHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
+                request.addHeader(Headers.CONTENT_LENGTH, "0");
+            }
+            request.addParameter("acl", null);
+
+            this.invoke(request, this.voidResponseHandler, bucketName, key);
+        }
+
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////
+
 
         /**
          * Creates and initializes a new request object for the specified KS3 resource.

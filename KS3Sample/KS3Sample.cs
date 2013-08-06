@@ -20,12 +20,8 @@ namespace KS3Sample
 {
     class KS3Sample
     {
-        //static String accessKey = "YOUR ACCESS KEY";
-        //static String secretKey = "YOUR SECRET KEY";
-        static String accessKey = "25CJISLBDDGJ6NDPBM2Q";
-        static String secretKey = "jwcbCqnhynOeNrBmhGg8pUzp8VHlukPocazXoqKK";
-        //static String accessKey = "VOAN2DHBJ5R3RIVLBM6A";
-        //static String secretKey = "9Ui66ypXGQfxgyBiYVrOKaTriDV3kMX83UNeKwzf";
+        static String accessKey = "YOUR ACCESS KEY";
+        static String secretKey = "YOUR SECRET KEY";
 
 		// KS3 Operation class 
 		static KS3Client ks3client = null;
@@ -40,49 +36,25 @@ namespace KS3Sample
 
 		static void Main(string[] args)
         {
-            //if (! init())
-            //    return;		// init failed 
+            if (!init())
+                return;		// init failed 
 
-            //Console.WriteLine("========== Begin ==========\n");
-			
-            //createBucket();
-            //listBuckets();
-            //getBucketACL();
-            //setBucketACL();
-            //putObject();
-            //listObjects();
-            //getObject();
-            //deleteObject();
-            //deleteBucket();
-            //catchKS3Exception();
+            Console.WriteLine("========== Begin ==========\n");
 
-            //Console.WriteLine("\n==========  End  ==========");
+            createBucket();
+            listBuckets();
+            getBucketACL();
+            setBucketACL();
+            putObject();
+            listObjects();
+            getObjectACL();
+            setObjectACL();
+            getObject();
+            deleteObject();
+            deleteBucket();
+            catchKS3Exception();
 
-
-
-
-            // ID E0D8906C4FFAA9029D28C80A
-
-            KS3Client ks3 = new KS3Client(new BasicKS3Credentials(accessKey, secretKey));
-            AccessControlList acl = new AccessControlList();
-            CanonicalGrantee owner = new CanonicalGrantee("DF462E857A9FEBD79DE2F03C", "DF462E857A9FEBD79DE2F03C");
-            CanonicalGrantee guest = new CanonicalGrantee("E0D8906C4FFAA9029D28C80A", "guest");
-            
-            acl.setOwner(new Owner(owner.getIdentifier(), owner.getIdentifier()));
-            acl.grantPermission(guest, Permission.READ);
-            //ks3.setBucketAcl("wangyubin", new CannedAccessControlList(CannedAccessControlList.PRIVATE));
-            try
-            {
-                ks3.setBucketAcl("wangyubin", acl);
-            }
-            catch (KS3Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-            
-            Console.WriteLine(ks3.getBucketAcl("wangyubin"));
-
-
+            Console.WriteLine("\n==========  End  ==========");
 		}
 
 		private static bool init()
@@ -174,7 +146,8 @@ namespace KS3Sample
 				Console.WriteLine("--- Get Bucket ACL: ---");
             
 			    AccessControlList acl = ks3client.getBucketAcl(bucketName);
-				Console.WriteLine(acl.ToString());
+                Console.WriteLine("Bucket Name: " + bucketName);
+                Console.WriteLine(acl.ToString());
 
 				Console.WriteLine("-----------------------\n");
 			}
@@ -191,15 +164,16 @@ namespace KS3Sample
 
 		private static bool setBucketACL()
 		{
-            // Put Bucket ACL
+            // Set Bucket ACL
 			try 
 			{
 				Console.WriteLine("--- Set Bucket ACL: ---");
 
 				CannedAccessControlList cannedAcl = new CannedAccessControlList(CannedAccessControlList.PUBLICK_READ_WRITE);
 				ks3client.setBucketAcl(bucketName, cannedAcl);
-	
-				Console.WriteLine("Success, now the ACL is: " + ks3client.getBucketAcl(bucketName));
+
+                Console.WriteLine("Bucket Name: " + bucketName);
+				Console.WriteLine("Success, now the ACL is:\n" + ks3client.getBucketAcl(bucketName));
 				Console.WriteLine("-----------------------\n");
 			}
 			catch (System.Exception e)
@@ -277,6 +251,53 @@ namespace KS3Sample
 
 			return true;
 		}
+
+        private static bool getObjectACL()
+        {
+            // Get Object ACL
+            try
+            {
+                Console.WriteLine("--- Get Object ACL: ---");
+
+                AccessControlList acl = ks3client.getObjectAcl(bucketName ,objKeyNameMemoryData);
+                Console.WriteLine("Object Key: " + objKeyNameMemoryData);
+                Console.WriteLine(acl.ToString());
+
+                Console.WriteLine("-----------------------\n");
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                return false;
+
+            }
+
+            return true;
+        }
+
+
+        private static bool setObjectACL()
+        {
+            // Set Object ACL
+            try
+            {
+                Console.WriteLine("--- Set Object ACL: ---");
+
+                CannedAccessControlList cannedAcl = new CannedAccessControlList(CannedAccessControlList.PUBLICK_READ_WRITE);
+                Console.WriteLine("Object Key: " + objKeyNameMemoryData);
+                ks3client.setObjectAcl(bucketName, objKeyNameMemoryData, cannedAcl);
+
+                Console.WriteLine("Success, now the ACL is:\n" + ks3client.getObjectAcl(bucketName, objKeyNameMemoryData));
+                Console.WriteLine("-----------------------\n");
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                return false;
+            }
+
+            return true;
+        }
 
 		private static bool getObject()
 		{
@@ -379,11 +400,11 @@ namespace KS3Sample
             // Now we will see a KS3Excetpion because will try to delete a bucket that does not exist.
             try
             {
-                Console.WriteLine("--- Delete Bucket: ---");
+                Console.WriteLine("--- Catch KS3Exception: ---");
 
                 ks3client.deleteBucket(bucketName);
 
-                Console.WriteLine("----------------------\n");
+                Console.WriteLine("---------------------------\n");
             }
             catch (KS3Exception e)
             {

@@ -78,6 +78,7 @@
     <Compile Include="Model\DeleteBucketRequest.cs" />
     <Compile Include="Model\DeleteObjectRequest.cs" />
     <Compile Include="Model\GetBucketAclRequest.cs" />
+    <Compile Include="Model\GetObjectAclRequest.cs" />
     <Compile Include="Model\GetObjectMetadataRequest.cs" />
     <Compile Include="Model\GetObjectRequest.cs" />
     <Compile Include="Model\Grant.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Model\PutObjectRequest.cs" />
     <Compile Include="Model\PutObjectResult.cs" />
     <Compile Include="Model\SetBucketAclRequest.cs" />
+    <Compile Include="Model\SetObjectAclRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="Transform\AccessControlListUnmarshaller.cs" />

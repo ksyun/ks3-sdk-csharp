@@ -29,7 +29,6 @@ namespace KS3.Transform
             bool inGrant = false;
             StringBuilder curText = new StringBuilder();
 
-
             XmlReader xr = XmlReader.Create(new BufferedStream(UnmarshallerUtils.sanitizeXmlDocument(inputStream)));
             while (xr.Read())
             {

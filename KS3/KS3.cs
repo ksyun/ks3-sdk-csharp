@@ -53,7 +53,7 @@ namespace KS3
         /**
          * Sets the AccessControlList for the specified KS3 bucket.
          */
-        void setBucketAcl(String bucketName, AccessControlList cannedAcl);
+        void setBucketAcl(String bucketName, AccessControlList acl);
 
         /**
          * Sets the AccessControlList for the specified KS3 bucket.
@@ -129,5 +129,30 @@ namespace KS3
          * Uploads a new object to the specified KS3 bucket.
          */
         PutObjectResult putObject(PutObjectRequest putObjectRequest);
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        AccessControlList getObjectAcl(String bucketName, String key);
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        AccessControlList getObjectAcl(GetObjectAclRequest getObjectAclRequest);
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        void setObjectAcl(String bucketName, String key, AccessControlList acl);
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        void setObjectAcl(String bucketName, String key, CannedAccessControlList cannedAcl);
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        void setObjectAcl(SetObjectAclRequest setObjectRequestAcl);
     }
 }
