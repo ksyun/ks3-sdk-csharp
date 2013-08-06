@@ -72,6 +72,7 @@
     <Compile Include="Model\AccessControlList.cs" />
     <Compile Include="Model\Bucket.cs" />
     <Compile Include="Model\CannedAccessControlList.cs" />
+    <Compile Include="Model\CanonicalGrantee.cs" />
     <Compile Include="Model\CreateBucketRequest.cs" />
     <Compile Include="DefaultRequest.cs" />
     <Compile Include="Model\DeleteBucketRequest.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="Model\GetObjectRequest.cs" />
     <Compile Include="Model\Grant.cs" />
     <Compile Include="Model\Grantee.cs" />
+    <Compile Include="Model\GroupGrantee.cs" />
     <Compile Include="Model\KS3Object.cs" />
     <Compile Include="Model\KS3ObjectSummary.cs" />
     <Compile Include="Model\KS3Request.cs" />
@@ -98,6 +100,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="Transform\AccessControlListUnmarshaller.cs" />
+    <Compile Include="Transform\AclXmlFactory.cs" />
     <Compile Include="Transform\ErrorResponseUnmarshaller.cs" />
     <Compile Include="Transform\ListBucketsUnmarshaller.cs" />
     <Compile Include="Transform\ListObjectsUnmarshallers.cs" />

@@ -24,6 +24,8 @@ namespace KS3Sample
         //static String secretKey = "YOUR SECRET KEY";
         static String accessKey = "25CJISLBDDGJ6NDPBM2Q";
         static String secretKey = "jwcbCqnhynOeNrBmhGg8pUzp8VHlukPocazXoqKK";
+        //static String accessKey = "VOAN2DHBJ5R3RIVLBM6A";
+        //static String secretKey = "9Ui66ypXGQfxgyBiYVrOKaTriDV3kMX83UNeKwzf";
 
 		// KS3 Operation class 
 		static KS3Client ks3client = null;
@@ -58,8 +60,26 @@ namespace KS3Sample
 
 
 
-            KS3Client ks3 = new KS3Client(new BasicKS3Credentials(accessKey, secretKey));
 
+            // ID E0D8906C4FFAA9029D28C80A
+
+            KS3Client ks3 = new KS3Client(new BasicKS3Credentials(accessKey, secretKey));
+            AccessControlList acl = new AccessControlList();
+            CanonicalGrantee owner = new CanonicalGrantee("DF462E857A9FEBD79DE2F03C", "DF462E857A9FEBD79DE2F03C");
+            CanonicalGrantee guest = new CanonicalGrantee("E0D8906C4FFAA9029D28C80A", "guest");
+            
+            acl.setOwner(new Owner(owner.getIdentifier(), owner.getIdentifier()));
+            acl.grantPermission(guest, Permission.READ);
+            //ks3.setBucketAcl("wangyubin", new CannedAccessControlList(CannedAccessControlList.PRIVATE));
+            try
+            {
+                ks3.setBucketAcl("wangyubin", acl);
+            }
+            catch (KS3Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+            
             Console.WriteLine(ks3.getBucketAcl("wangyubin"));
 
 

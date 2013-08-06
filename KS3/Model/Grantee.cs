@@ -5,61 +5,29 @@ using System.Text;
 
 namespace KS3.Model
 {
-    public class Grantee
+    /**
+     * Represents a grantee (entity) that can be assigned access permissions in an
+     * {@link AccessControlList}. All grantees have an ID of some kind, though the
+     * format of the ID can differ depending on the kind of grantee.
+     */
+    public interface Grantee
     {
-        private String id = null;
-        private String displayName = null;
+        /**
+         * Returns the identifier for the type of this grant, to be used when
+         * specifying grants in the header of a request.
+         */
+        String getTypeIdentifier();
 
-        public Grantee(String id)
-        {
-            this.id = id;
-        }
+        /**
+         * Sets the identifier for this grantee. The meaning of the identifier is
+         * specific to each implementation of the {@link Grantee}.
+         */
+        void setIdentifier(String id);
 
-        public Grantee(String id, String displayName)
-        {
-            this.id = id;
-            this.displayName = displayName;
-        }
-
-        public void setIdentifier(String id)
-        {
-            this.id = id;
-        }
-
-        public String getIdentifier()
-        {
-            return this.id;
-        }
-
-        public void setDisplayName(String displayName)
-        {
-            this.displayName = displayName;
-        }
-
-        public String getDisplayName()
-        {
-            return this.displayName;
-        }
-
-        public override int GetHashCode()
-        {
-            return this.id.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null)
-                return false;
-
-            if (obj.GetType().Equals(this.GetType()))
-                return this.id.Equals(((Grantee)obj).id);
-
-            return false;
-        }
-
-        public override string ToString()
-        {
-            return "Grantee [id=" + this.id + ", displayName=" + this.displayName + "]";
-        }
+        /**
+         * Gets the identifier for this grantee. The meaning of the grantee
+         * identifier is specific to each implementation of the {@link Grantee}.
+         */
+        String getIdentifier();
     }
 }

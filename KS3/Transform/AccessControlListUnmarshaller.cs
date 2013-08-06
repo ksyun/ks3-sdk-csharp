@@ -21,8 +21,10 @@ namespace KS3.Transform
             String ownerId = null;
             String ownerDisplayName = null;
             Grantee grantee = null;
-            String granteeId = null;
-            String granteeDisplayName = null;
+            String granteeType = null;
+            String userId = null;
+            String userDisplayName = null;
+            String groupUri = null;
             String permission = null;
             bool inGrant = false;
             StringBuilder curText = new StringBuilder();
@@ -35,6 +37,8 @@ namespace KS3.Transform
                 {
                     if (xr.Name.Equals("Grant"))
                         inGrant = true;
+                    else if (xr.Name.Equals("Grantee"))
+                        granteeType = xr.GetAttribute("xsi:type");
                 }
                 else if (xr.NodeType.Equals(XmlNodeType.EndElement))
                 {
@@ -43,22 +47,29 @@ namespace KS3.Transform
                         if (!inGrant)
                             ownerId = curText.ToString();
                         else
-                            granteeId = curText.ToString();
+                            userId = curText.ToString();
                     }
                     else if (xr.Name.Equals("ID"))
                     {
                         if (!inGrant)
                             ownerDisplayName = curText.ToString();
                         else
-                            granteeDisplayName = curText.ToString();
+                            userDisplayName = curText.ToString();
                     }
+                    else if (xr.Name.Equals("URI"))
+                        groupUri = curText.ToString();
                     else if (xr.Name.Equals("Owner"))
                     {
                         owner = new Owner(ownerId, ownerDisplayName);
                         acl.setOwner(owner);
                     }
                     else if (xr.Name.Equals("Grantee"))
-                        grantee = new Grantee(granteeId, granteeDisplayName);
+                    {
+                        if (granteeType.Equals("CanonicalUser"))
+                            grantee = new CanonicalGrantee(userId, userDisplayName);
+                        else if (granteeType.Equals("Group"))
+                            grantee = new GroupGrantee(groupUri);
+                    }
                     else if (xr.Name.Equals("Permission"))
                         permission = curText.ToString();
                     else if (xr.Name.Equals("Grant"))
@@ -73,8 +84,7 @@ namespace KS3.Transform
                 {
                     curText.Append(xr.Value);
                 }
-
-            }
+            } // end while
 
             return acl;
         } // end of unmarshall

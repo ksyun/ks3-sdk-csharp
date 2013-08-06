@@ -192,11 +192,29 @@ namespace KS3
         public void setBucketAcl(SetBucketAclRequest setBucketAclRequest)
         {
             String bucketName = setBucketAclRequest.getBucketName();
-            Request<SetBucketAclRequest> request = this.createRequest(bucketName, null, setBucketAclRequest, HttpMethodName.PUT);
+            AccessControlList acl = setBucketAclRequest.getAcl();
+            CannedAccessControlList cannedAcl = setBucketAclRequest.getCannedAcl();
 
-            if (setBucketAclRequest.getCannedAcl().getCannedAclHeader() != null)
-                request.addHeader(Headers.KS3_CANNED_ACL, setBucketAclRequest.getCannedAcl().getCannedAclHeader());
-            request.getHeaders()[Headers.CONTENT_LENGTH] = "0";
+            Request<SetBucketAclRequest> request = this.createRequest(bucketName, null, setBucketAclRequest, HttpMethodName.PUT);
+            
+            if (acl != null)
+            {
+                String xml = new AclXmlFactory().convertToXmlString(acl);
+                MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+
+
+                Console.WriteLine(xml);
+
+
+                request.setContent(memoryStream);
+                request.addHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
+            }
+            else if (cannedAcl != null)
+            {
+                request.addHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
+                request.addHeader(Headers.CONTENT_LENGTH, "0");
+            }
+            //request.addParameter("acl", null);
 
             this.invoke(request, this.voidResponseHandler, bucketName, null);
         }
@@ -509,7 +527,7 @@ namespace KS3
                 request.addParameter(name, parameters[name]);
             request.setTimeOffset(timeOffset);
 
-            /*
+            /**
              * The string we sign needs to include the exact headers that we
              * send with the request, but the client runtime layer adds the
              * Content-Type header before the request is sent if one isn't set, so
@@ -518,11 +536,11 @@ namespace KS3
             if (!request.getHeaders().ContainsKey(Headers.CONTENT_TYPE))
                 request.addHeader(Headers.CONTENT_TYPE, Mimetypes.DEFAULT_MIMETYPE);
             
-            KS3Credentials credentials = ks3Credentials;
-            KS3Request originalRequest = request.getOriginalRequest();
-            if (originalRequest != null && originalRequest.getRequestCredentials() != null)
-                credentials = originalRequest.getRequestCredentials();
-            request.getOriginalRequest().setRequestCredentials(credentials);
+            /**
+             * Set the credentials which will be used by the KS3Signer later.
+             */
+            if(request.getOriginalRequest().getRequestCredentials() == null)
+                request.getOriginalRequest().setRequestCredentials(this.ks3Credentials);
 
             return client.excute(request, responseHandler, createSigner(request, bucket, key));
         }
