@@ -36,6 +36,7 @@ namespace KS3.Http
             httpRequest.Method = request.getHttpMethod().ToString();
             
             httpRequest.AllowWriteStreamBuffering = false; // important
+
             httpRequest.Timeout = clientConfiguration.getTimeout();
             httpRequest.ReadWriteTimeout = clientConfiguration.getReadWriteTimeout();
 

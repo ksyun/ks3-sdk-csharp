@@ -32,12 +32,26 @@ namespace KS3
         /** Optional offset (in seconds) to use when signing requests */
         private int timeOffset;
 
-        public KS3Client(KS3Credentials ks3Credentials)
-            : this(ks3Credentials, new ClientConfiguration()) { }
-
+        /**
+         * Constructs a new KS3Client object using the specified Access Key ID and Secret Key.
+         */
+        public KS3Client(String accessKey, String secretKey)
+            : this(new BasicKS3Credentials(accessKey, secretKey)) { }
 
         /**
          * Constructs a new KS3Client object using the specified configuration.
+         */
+        public KS3Client(KS3Credentials ks3Credentials)
+            : this(ks3Credentials, new ClientConfiguration()) { }
+
+        /**
+         * Constructs a new KS3Client object using the specified Access Key ID, Secret Key and configuration.
+         */
+        public KS3Client(String accessKey, String secretKey, ClientConfiguration clientConfiguration)
+            : this(new BasicKS3Credentials(accessKey, secretKey), clientConfiguration) { }
+
+        /**
+         * Constructs a new KS3Client object using the specified credential and configuration.
          */
         public KS3Client(KS3Credentials ks3Credentials, ClientConfiguration clientConfiguration)
         {

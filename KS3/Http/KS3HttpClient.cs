@@ -24,6 +24,34 @@ namespace KS3.Http
         public KS3HttpClient(ClientConfiguration clientConfiguration)
         {
             this.config = clientConfiguration;
+            this.init();
+        }
+
+        private void init()
+        {
+            /* Set max connections */
+            int maxConnections = config.getMaxConnections();
+            ServicePointManager.DefaultConnectionLimit = maxConnections;
+
+            /* Set proxy if configured */
+            String proxyHost = config.getProxyHost();
+            int proxyPort = config.getProxyPort();
+            if (proxyHost != null && proxyPort > 0)
+            {
+                WebProxy webProxy = new WebProxy(proxyHost, proxyPort);
+
+                String proxyUsername = config.getProxyUsername();
+                String proxyPassword = config.getProxyPassword();
+                if (proxyUsername != null && proxyPassword != null)
+                {
+                    NetworkCredential credential = new NetworkCredential(proxyUsername, proxyPassword);
+                    webProxy.Credentials = credential;
+                }
+
+                WebRequest.DefaultWebProxy = webProxy;
+            }
+            else
+                WebRequest.DefaultWebProxy = null;
         }
 
         public X excute<X, Y>(Request<Y> request, HttpResponseHandler<X> responseHandler, KS3Signer<Y> ks3Signer) where Y : KS3Request
