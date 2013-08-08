@@ -33,12 +33,12 @@ namespace KS3
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        CannedAccessControlList getBucketAcl(String bucketName);
+        AccessControlList getBucketAcl(String bucketName);
 
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        CannedAccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest);
+        AccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest);
 
         /**
          * Creates a new KS3 bucket. 
@@ -49,6 +49,11 @@ namespace KS3
          * Creates a new KS3 bucket. 
          */
         Bucket createBucket(CreateBucketRequest createBucketRequest);
+
+        /**
+         * Sets the AccessControlList for the specified KS3 bucket.
+         */
+        void setBucketAcl(String bucketName, AccessControlList acl);
 
         /**
          * Sets the AccessControlList for the specified KS3 bucket.
@@ -124,5 +129,30 @@ namespace KS3
          * Uploads a new object to the specified KS3 bucket.
          */
         PutObjectResult putObject(PutObjectRequest putObjectRequest);
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        AccessControlList getObjectAcl(String bucketName, String key);
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        AccessControlList getObjectAcl(GetObjectAclRequest getObjectAclRequest);
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        void setObjectAcl(String bucketName, String key, AccessControlList acl);
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        void setObjectAcl(String bucketName, String key, CannedAccessControlList cannedAcl);
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        void setObjectAcl(SetObjectAclRequest setObjectRequestAcl);
     }
 }

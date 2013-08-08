@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace KS3
+namespace KS3.KS3Exception
 {
-    public class KS3Exception : Exception
+    public class ServiceException : Exception
     {
         private String requestId;
 
@@ -18,18 +18,18 @@ namespace KS3
         /** The HTTP status code that was returned with this error */
         private int statusCode;
 
-        public KS3Exception() : base() { }
+        public ServiceException() : base() { }
 
         /**
          * Constructs a new KS3ClientException with the specified message.
          */
-        public KS3Exception(String message) : base(message) { }
+        public ServiceException(String message) : base(message) { }
 
         /**
          * Constructs a new KS3ClientException with the specified message and
          * exception indicating the root cause.
          */
-        public KS3Exception(String message, Exception cause) : base(message, cause) { }
+        public ServiceException(String message, Exception cause) : base(message, cause) { }
 
         public void setRequestId(String requestId)
         {
@@ -75,8 +75,7 @@ namespace KS3
                    "Status Code: " + this.getStatusCode(),
                    "Request ID: " + this.getRequestId(),
                    "Error Code: " + this.getErrorCode(),
-                   "Error Message: " + this.Message,
-                   this.StackTrace});
+                   "Error Message: " + this.Message});
         }
     }
 }

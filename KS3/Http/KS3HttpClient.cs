@@ -9,6 +9,7 @@ using KS3.Auth;
 using KS3.Model;
 using KS3.Internal;
 using KS3.Transform;
+using KS3.KS3Exception;
 
 namespace KS3.Http
 {
@@ -24,6 +25,34 @@ namespace KS3.Http
         public KS3HttpClient(ClientConfiguration clientConfiguration)
         {
             this.config = clientConfiguration;
+            this.init();
+        }
+
+        private void init()
+        {
+            /* Set max connections */
+            int maxConnections = config.getMaxConnections();
+            ServicePointManager.DefaultConnectionLimit = maxConnections;
+
+            /* Set proxy if configured */
+            String proxyHost = config.getProxyHost();
+            int proxyPort = config.getProxyPort();
+            if (proxyHost != null && proxyPort > 0)
+            {
+                WebProxy webProxy = new WebProxy(proxyHost, proxyPort);
+
+                String proxyUsername = config.getProxyUsername();
+                String proxyPassword = config.getProxyPassword();
+                if (proxyUsername != null && proxyPassword != null)
+                {
+                    NetworkCredential credential = new NetworkCredential(proxyUsername, proxyPassword);
+                    webProxy.Credentials = credential;
+                }
+
+                WebRequest.DefaultWebProxy = webProxy;
+            }
+            else
+                WebRequest.DefaultWebProxy = null;
         }
 
         public X excute<X, Y>(Request<Y> request, HttpResponseHandler<X> responseHandler, KS3Signer<Y> ks3Signer) where Y : KS3Request
@@ -67,16 +96,16 @@ namespace KS3.Http
                 catch (WebException we)
                 {
                     HttpWebResponse errorResponse = (HttpWebResponse)we.Response;
-                    KS3Exception ks3Exception = null;
+                    ServiceException serviceException = null;
                     try
                     {
-                        ks3Exception = errorResponseHandler.handle(errorResponse);
+                        serviceException = errorResponseHandler.handle(errorResponse);
                     }
                     catch
                     {
                         throw we;
                     }
-                    if (!shouldRetry(retryCount, ks3Exception)) throw ks3Exception;
+                    if (!shouldRetry(retryCount, serviceException)) throw serviceException;
                 }
                 finally
                 {
@@ -109,17 +138,17 @@ namespace KS3.Http
                                           response.Headers["location"].Length > 0;
         }
 
-        private Boolean shouldRetry(int retryCount, KS3Exception ks3Exception)
+        private Boolean shouldRetry(int retryCount, ServiceException serviceException)
         {
             if (retryCount >= this.config.getMaxErrorRetry()) return false;
 
-            if (ks3Exception.getStatusCode() == (int)HttpStatusCode.InternalServerError
-                || ks3Exception.getStatusCode() == (int)HttpStatusCode.ServiceUnavailable)
+            if (serviceException.getStatusCode() == (int)HttpStatusCode.InternalServerError
+                || serviceException.getStatusCode() == (int)HttpStatusCode.ServiceUnavailable)
                 return true;
 
-            if ("RequestTimeTooSkewed".Equals(ks3Exception.getErrorCode())
-                || "InvalidSignatureException".Equals(ks3Exception.getErrorCode())
-                || "SignatureDoesNotMatch".Equals(ks3Exception.getErrorCode()))
+            if ("RequestTimeTooSkewed".Equals(serviceException.getErrorCode())
+                || "InvalidSignatureException".Equals(serviceException.getErrorCode())
+                || "SignatureDoesNotMatch".Equals(serviceException.getErrorCode()))
                 return true;
 
             return false;

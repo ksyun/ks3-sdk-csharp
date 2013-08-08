@@ -7,16 +7,19 @@ namespace KS3.Model
 {
     public class ProgressEvent
     {
+        public static int CONTINUE = 0;
+
         // Single part event codes
-        public static int STARTED_EVENT_CODE   = 1;
-        public static int COMPLETED_EVENT_CODE = 2;
-        public static int FAILED_EVENT_CODE    = 4;
-        public static int CANCELED_EVENT_CODE  = 8;
+        public static int STARTED     = 1;
+        public static int COMPLETED   = 2;
+        public static int FAILED      = 4;
+        public static int CANCELED    = 8;
+        public static int TRANSFERRED = 16;
 
         // Multipart event codes
-        public static int PART_STARTED_EVENT_CODE   = 1024;
-        public static int PART_COMPLETED_EVENT_CODE = 2048;
-        public static int PART_FAILED_EVENT_CODE    = 4096;
+        public static int PART_STARTED   = 1024;
+        public static int PART_COMPLETED = 2048;
+        public static int PART_FAILED    = 4096;
 
         /** The number of bytes transferred since the last progress event. */
         private int bytesTransferred;
@@ -27,9 +30,8 @@ namespace KS3.Model
          */
         private int eventCode;
 
-        public ProgressEvent(int bytesTransferred, int eventCode)
+        public ProgressEvent(int eventCode)
         {
-            this.bytesTransferred = bytesTransferred;
             this.eventCode = eventCode;
         }
 

@@ -3,18 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using System.Net;
-using System.Security.Cryptography;
-using System.Globalization;
-using System.Xml;
-using System.Diagnostics;
-using System.Threading;
 
 using KS3;
 using KS3.Auth;
 using KS3.Http;
 using KS3.Model;
 using KS3.Internal;
+using KS3.KS3Exception;
 
 namespace KS3Sample
 {
@@ -24,7 +19,7 @@ namespace KS3Sample
         static String secretKey = "YOUR SECRET KEY";
 
 		// KS3 Operation class 
-		static KS3Client ks3client = null;
+		static KS3Client ks3Client = null;
 
 		static String bucketName = null;
 		static String objKeyNameMemoryData	= "short-content";
@@ -36,23 +31,23 @@ namespace KS3Sample
 
 		static void Main(string[] args)
         {
-			if (! init())
-				return;		// init failed 
+            if (!init())
+                return;		// init failed 
 
             Console.WriteLine("========== Begin ==========\n");
-			
-			createBucket();
-			listBuckets();
-			getBucketACL();
-			setBucketACL();
-			putObject();
-			listObjects();
-			getObject();
-			deleteObject();
-			deleteBucket();
-            catchKS3Exception();
-
-			Console.WriteLine("\n==========  End  ==========");
+            createBucket();
+            listBuckets();
+            getBucketACL();
+            setBucketACL();
+            putObject();
+            listObjects();
+            getObjectACL();
+            setObjectACL();
+            getObject();
+            deleteObject();
+            deleteBucket();
+            catchServiceException();
+            Console.WriteLine("\n==========  End  ==========");
 		}
 
 		private static bool init()
@@ -62,7 +57,7 @@ namespace KS3Sample
 				Console.WriteLine("You should be set your Access Key and Secret Key");
 				return false;
 			}
-			ks3client = new KS3Client(new BasicKS3Credentials(accessKey, secretKey));
+			ks3Client = new KS3Client(accessKey, secretKey);
 
 			FileInfo fi = new FileInfo(inFilePath);
             if (!fi.Exists)
@@ -98,7 +93,7 @@ namespace KS3Sample
                 Console.WriteLine("--- Create Bucket: ---");
                 Console.WriteLine("Bucket Name: " + bucketName);
 
-				Bucket bucket = ks3client.createBucket(bucketName);
+				Bucket bucket = ks3Client.createBucket(bucketName);
 
 				Console.WriteLine("Success.");
 				Console.WriteLine("----------------------\n");
@@ -119,7 +114,7 @@ namespace KS3Sample
 			{
 				Console.WriteLine("--- List Buckets: ---");
 
-				List<Bucket> bucketsList = ks3client.listBuckets();
+				List<Bucket> bucketsList = ks3Client.listBuckets();
 				foreach (Bucket b in bucketsList)
 				{
 					Console.WriteLine(b.ToString());
@@ -143,8 +138,9 @@ namespace KS3Sample
 			{
 				Console.WriteLine("--- Get Bucket ACL: ---");
             
-				CannedAccessControlList cacl = ks3client.getBucketAcl(bucketName);
-				Console.WriteLine(cacl.ToString());
+			    AccessControlList acl = ks3Client.getBucketAcl(bucketName);
+                Console.WriteLine("Bucket Name: " + bucketName);
+                Console.WriteLine(acl.ToString());
 
 				Console.WriteLine("-----------------------\n");
 			}
@@ -161,15 +157,16 @@ namespace KS3Sample
 
 		private static bool setBucketACL()
 		{
-            // Put Bucket ACL
+            // Set Bucket ACL
 			try 
 			{
 				Console.WriteLine("--- Set Bucket ACL: ---");
 
 				CannedAccessControlList cannedAcl = new CannedAccessControlList(CannedAccessControlList.PUBLICK_READ_WRITE);
-				ks3client.setBucketAcl(bucketName, cannedAcl);
-	
-				Console.WriteLine("Success, now the ACL is: " + ks3client.getBucketAcl(bucketName));
+				ks3Client.setBucketAcl(bucketName, cannedAcl);
+
+                Console.WriteLine("Bucket Name: " + bucketName);
+				Console.WriteLine("Success, now the ACL is:\n" + ks3Client.getBucketAcl(bucketName));
 				Console.WriteLine("-----------------------\n");
 			}
 			catch (System.Exception e)
@@ -190,7 +187,7 @@ namespace KS3Sample
 
 				String sampleContent = "This is a sample content.(25 characters before, included the 4 spaces)";
 				Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(sampleContent));
-				PutObjectResult shortContentResult = ks3client.putObject(bucketName, objKeyNameMemoryData, stream, null);
+				PutObjectResult shortContentResult = ks3Client.putObject(bucketName, objKeyNameMemoryData, stream, null);
 	
 				Console.WriteLine("Upload Completed. eTag=" + shortContentResult.getETag() + ", MD5=" + shortContentResult.getContentMD5());
 				Console.WriteLine("-------------------------------\n");
@@ -202,7 +199,7 @@ namespace KS3Sample
 				PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, objKeyNameFileData, file);
 				SampleListener sampleListener = new SampleListener(file.Length);
 				putObjectRequest.setProgressListener(sampleListener);
-				PutObjectResult putObjectResult = ks3client.putObject(putObjectRequest);
+				PutObjectResult putObjectResult = ks3Client.putObject(putObjectRequest);
 				
 				Console.WriteLine("Upload Completed. eTag=" + putObjectResult.getETag() + ", MD5=" + putObjectResult.getContentMD5());
 				Console.WriteLine("---------------------\n");
@@ -223,7 +220,7 @@ namespace KS3Sample
 				// List Objects
 				Console.WriteLine("--- List Objects: ---");
 
-				ObjectListing objects = ks3client.listObjects(bucketName);
+				ObjectListing objects = ks3Client.listObjects(bucketName);
 
 				Console.WriteLine(objects.ToString());
 				Console.WriteLine("---------------------\n");
@@ -231,10 +228,10 @@ namespace KS3Sample
 				// Get Object Metadata
 				Console.WriteLine("--- Get Object Metadata ---");
 
-				ObjectMetadata objMeta = ks3client.getObjectMetadata(bucketName, objKeyNameMemoryData); 
+				ObjectMetadata objMeta = ks3Client.getObjectMetadata(bucketName, objKeyNameMemoryData); 
 				Console.WriteLine(objMeta.ToString());
                 Console.WriteLine();
-				objMeta = ks3client.getObjectMetadata(bucketName, objKeyNameFileData);
+				objMeta = ks3Client.getObjectMetadata(bucketName, objKeyNameFileData);
 				Console.WriteLine(objMeta.ToString());
 				
 				Console.WriteLine("---------------------------\n");
@@ -248,6 +245,53 @@ namespace KS3Sample
 			return true;
 		}
 
+        private static bool getObjectACL()
+        {
+            // Get Object ACL
+            try
+            {
+                Console.WriteLine("--- Get Object ACL: ---");
+
+                AccessControlList acl = ks3Client.getObjectAcl(bucketName ,objKeyNameMemoryData);
+                Console.WriteLine("Object Key: " + objKeyNameMemoryData);
+                Console.WriteLine(acl.ToString());
+
+                Console.WriteLine("-----------------------\n");
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                return false;
+
+            }
+
+            return true;
+        }
+
+
+        private static bool setObjectACL()
+        {
+            // Set Object ACL
+            try
+            {
+                Console.WriteLine("--- Set Object ACL: ---");
+
+                CannedAccessControlList cannedAcl = new CannedAccessControlList(CannedAccessControlList.PUBLICK_READ_WRITE);
+                Console.WriteLine("Object Key: " + objKeyNameMemoryData);
+                ks3Client.setObjectAcl(bucketName, objKeyNameMemoryData, cannedAcl);
+
+                Console.WriteLine("Success, now the ACL is:\n" + ks3Client.getObjectAcl(bucketName, objKeyNameMemoryData));
+                Console.WriteLine("-----------------------\n");
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                return false;
+            }
+
+            return true;
+        }
+
 		private static bool getObject()
 		{
 			try
@@ -257,7 +301,7 @@ namespace KS3Sample
 				
 				GetObjectRequest getShortContent = new GetObjectRequest(bucketName, objKeyNameMemoryData);
 				getShortContent.setRange(0, 24);
-				KS3Object ks3Object = ks3client.getObject(getShortContent);
+				KS3Object ks3Object = ks3Client.getObject(getShortContent);
 				
 				StreamReader sr = new StreamReader(ks3Object.getObjectContent());
 				Console.WriteLine("Content:\n" + sr.ReadToEnd());
@@ -279,12 +323,12 @@ namespace KS3Sample
 				Console.WriteLine("--- Download a File ---");
 
 				// I need to get the Content-Length to set the listener.
-				ObjectMetadata objectMetadata = ks3client.getObjectMetadata(bucketName, objKeyNameFileData); 
+				ObjectMetadata objectMetadata = ks3Client.getObjectMetadata(bucketName, objKeyNameFileData); 
 				
 				SampleListener downloadListener = new SampleListener(objectMetadata.getContentLength());
 				GetObjectRequest getObjectRequest = new GetObjectRequest(bucketName, objKeyNameFileData, new FileInfo(outFilePath));
 				getObjectRequest.setProgressListener(downloadListener);
-				KS3Object obj = ks3client.getObject(getObjectRequest);
+				KS3Object obj = ks3Client.getObject(getObjectRequest);
 				obj.getObjectContent().Close(); // The file was opened in [KS3ObjectResponseHandler], so I close it first. 
 				
 				Console.WriteLine("Success. See the file downloaded at {0}", outFilePath);
@@ -306,8 +350,8 @@ namespace KS3Sample
 			{
 				Console.WriteLine("--- Delete Object: ---");
 
-				ks3client.deleteObject(bucketName, objKeyNameMemoryData);
-				ks3client.deleteObject(bucketName, objKeyNameFileData);
+				ks3Client.deleteObject(bucketName, objKeyNameMemoryData);
+				ks3Client.deleteObject(bucketName, objKeyNameFileData);
 
 				Console.WriteLine("Delete Object completed.");
 				Console.WriteLine("---------------------\n");
@@ -328,7 +372,7 @@ namespace KS3Sample
             {
                 Console.WriteLine("--- Delete Bucket: ---");
 
-                ks3client.deleteBucket(bucketName);
+                ks3Client.deleteBucket(bucketName);
                 
                 Console.WriteLine("Delete Bucket completed.");
 				Console.WriteLine("----------------------\n");
@@ -341,21 +385,21 @@ namespace KS3Sample
 			return true;
         }
 
-        private static bool catchKS3Exception()
+        private static bool catchServiceException()
         {
-            // This is a sample of catch KS3Exception.
-            // You can catch the KS3Exception when some illegal operations appear.
+            // This is a sample of catch ServiceException of KS3.
+            // You can catch the ServiceException when some illegal operations appear.
             // But note that, if we have done some illegal operations, there also may appear some other unexcepted exceptions too.
-            // Now we will see a KS3Excetpion because will try to delete a bucket that does not exist.
+            // Now we will see a ServiceException because will try to delete a bucket that does not exist.
             try
             {
-                Console.WriteLine("--- Delete Bucket: ---");
+                Console.WriteLine("--- Catch ServiceException: ---");
 
-                ks3client.deleteBucket(bucketName);
+                ks3Client.deleteBucket(bucketName);
 
-                Console.WriteLine("----------------------\n");
+                Console.WriteLine("-------------------------------\n");
             }
-            catch (KS3Exception e)
+            catch (ServiceException e)
             {
                 Console.WriteLine(e.ToString());
                 return false;
@@ -375,6 +419,7 @@ namespace KS3Sample
         long size = -1;
         long completedSize = 0;
         int rate = 0;
+        bool cancled = false;
 
         public SampleListener() { }
 
@@ -387,24 +432,30 @@ namespace KS3Sample
         {
             int eventCode = progressEvent.getEventCode();
 
-			if (eventCode == ProgressEvent.STARTED_EVENT_CODE) 
-				Console.WriteLine("Started.");
-			else if (eventCode == ProgressEvent.COMPLETED_EVENT_CODE)
-				Console.WriteLine("Completed.");
-			else if (eventCode == ProgressEvent.FAILED_EVENT_CODE)
-				Console.WriteLine("Failed.");
-			else
-			{
-				this.completedSize += progressEvent.getBytesTransferred();
-				int newRate = (int)((double)completedSize / size * 100 + 0.5);
-				if (newRate > this.rate)
-				{
-					this.rate = newRate;
-					Console.WriteLine("Processing ... " + this.rate + "%");
-				}
-			}
+            if (eventCode == ProgressEvent.STARTED)
+                Console.WriteLine("Started.");
+            else if (eventCode == ProgressEvent.COMPLETED)
+                Console.WriteLine("Completed.");
+            else if (eventCode == ProgressEvent.FAILED)
+                Console.WriteLine("Failed.");
+            else if (eventCode == ProgressEvent.CANCELED)
+                Console.WriteLine("Cancled.");
+            else if (eventCode == ProgressEvent.TRANSFERRED)
+            {
+                this.completedSize += progressEvent.getBytesTransferred();
+                int newRate = (int)((double)completedSize / size * 100 + 0.5);
+                if (newRate > this.rate)
+                {
+                    this.rate = newRate;
+                    Console.WriteLine("Processing ... " + this.rate + "%");
+                }
+            }
         } // end of progressChanged
 
+        public bool askContinue()
+        {
+            return !this.cancled;
+        }
     }
 
 }

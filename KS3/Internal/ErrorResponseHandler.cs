@@ -7,10 +7,11 @@ using System.IO;
 
 using KS3.Transform;
 using KS3.Http;
+using KS3.KS3Exception;
 
 namespace KS3.Internal
 {
-    public class ErrorResponseHandler : HttpResponseHandler<KS3Exception>
+    public class ErrorResponseHandler : HttpResponseHandler<ServiceException>
     {
         /** The SAX unmarshaller to use when handling the response from KS3 */
         private ErrorResponseUnmarshaller unmarshaller;
@@ -21,11 +22,11 @@ namespace KS3.Internal
         }
 
 
-        public KS3Exception handle(HttpWebResponse errorResponse)
+        public ServiceException handle(HttpWebResponse errorResponse)
         {
-            KS3Exception ks3Exception = unmarshaller.unmarshall(errorResponse.GetResponseStream());
-            ks3Exception.setStatusCode((int)errorResponse.StatusCode);
-            return ks3Exception;
+            ServiceException serviceException = unmarshaller.unmarshall(errorResponse.GetResponseStream());
+            serviceException.setStatusCode((int)errorResponse.StatusCode);
+            return serviceException;
         }
 
         public Boolean needsConnectionLeftOpen()

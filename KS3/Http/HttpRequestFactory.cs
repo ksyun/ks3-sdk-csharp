@@ -36,11 +36,12 @@ namespace KS3.Http
             httpRequest.Method = request.getHttpMethod().ToString();
             
             httpRequest.AllowWriteStreamBuffering = false; // important
+
             httpRequest.Timeout = clientConfiguration.getTimeout();
             httpRequest.ReadWriteTimeout = clientConfiguration.getReadWriteTimeout();
 
             configureHeaders(httpRequest, request, clientConfiguration);
-            
+
             if (request.getContent() != null)
             {
                 Stream inputStream = request.getContent();
@@ -54,6 +55,11 @@ namespace KS3.Http
                     if (size <= 0) break;
                     requestStream.Write(buf, 0, size);
                 }
+
+                inputStream.Close();
+
+                requestStream.Flush();
+                requestStream.Close();
             }
 
             return httpRequest;
@@ -94,13 +100,13 @@ namespace KS3.Http
                 String value = request.getHeaders()[name];
 
                 if (name.Equals(Headers.CONTENT_TYPE)) httpRequest.ContentType = value;
-                else if (name.Equals(Headers.CONTENT_LENGTH)) httpRequest.ContentLength = int.Parse(value);
+                else if (name.Equals(Headers.CONTENT_LENGTH)) httpRequest.ContentLength = long.Parse(value);
                 else if (name.Equals(Headers.USER_AGENT)) httpRequest.UserAgent = value;
                 else if (name.Equals(Headers.DATE)) httpRequest.Date = DateTime.Parse(value);
                 else if (name.Equals(Headers.RANGE))
                 {
                     String[] range = value.Split('-');
-                    httpRequest.AddRange(int.Parse(range[0]), int.Parse(range[1]));
+                    httpRequest.AddRange(long.Parse(range[0]), long.Parse(range[1]));
                 }
                 else if (name.Equals(Headers.GET_OBJECT_IF_MODIFIED_SINCE)) httpRequest.IfModifiedSince = DateTime.Parse(value);
                 else httpRequest.Headers[name] = value;

@@ -15,8 +15,6 @@ namespace KS3.Model
         
         private Owner ower;
 
-        public CannedAccessControlList() { }
-
         public CannedAccessControlList(String cannedAclHeader)
         {
             this.cannedAclHeader = cannedAclHeader;

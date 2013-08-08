@@ -53,5 +53,19 @@ namespace KS3
         /** Header for optional redirect location of an object */
         public static String REDIRECT_LOCATION = "x-kss-website-redirect-location";
 
+        /** Header for the FULL_CONTROL permission */
+        public static String PERMISSION_FULL_CONTROL = "x-kss-grant-full-control";
+
+        /** Header for the READ permission */
+        public static String PERMISSION_READ = "x-kss-grant-read";
+
+        /** Header for the WRITE permission */
+        public static String PERMISSION_WRITE = "x-kss-grant-write";
+
+        /** Header for the READ_ACP permission */
+        public static String PERMISSION_READ_ACP = "x-kss-grant-read-acp";
+
+        /** Header for the WRITE_ACP permission */
+        public static String PERMISSION_WRITE_ACP = "x-kss-grant-write-acp";
     }
 }

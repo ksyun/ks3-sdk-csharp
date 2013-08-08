@@ -10,6 +10,7 @@ using KS3.Auth;
 using KS3.Http;
 using KS3.Internal;
 using KS3.Transform;
+using KS3.KS3Exception;
 
 namespace KS3
 {
@@ -32,12 +33,26 @@ namespace KS3
         /** Optional offset (in seconds) to use when signing requests */
         private int timeOffset;
 
-        public KS3Client(KS3Credentials ks3Credentials)
-            : this(ks3Credentials, new ClientConfiguration()) { }
-
+        /**
+         * Constructs a new KS3Client object using the specified Access Key ID and Secret Key.
+         */
+        public KS3Client(String accessKey, String secretKey)
+            : this(new BasicKS3Credentials(accessKey, secretKey)) { }
 
         /**
          * Constructs a new KS3Client object using the specified configuration.
+         */
+        public KS3Client(KS3Credentials ks3Credentials)
+            : this(ks3Credentials, new ClientConfiguration()) { }
+
+        /**
+         * Constructs a new KS3Client object using the specified Access Key ID, Secret Key and configuration.
+         */
+        public KS3Client(String accessKey, String secretKey, ClientConfiguration clientConfiguration)
+            : this(new BasicKS3Credentials(accessKey, secretKey), clientConfiguration) { }
+
+        /**
+         * Constructs a new KS3Client object using the specified credential and configuration.
          */
         public KS3Client(KS3Credentials ks3Credentials, ClientConfiguration clientConfiguration)
         {
@@ -126,7 +141,7 @@ namespace KS3
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        public CannedAccessControlList getBucketAcl(String bucketName)
+        public AccessControlList getBucketAcl(String bucketName)
         {
             return getBucketAcl(new GetBucketAclRequest(bucketName));
         }
@@ -134,14 +149,14 @@ namespace KS3
         /**
          * Gets the AccessControlList (ACL) for the specified KS3 bucket.
          */
-        public CannedAccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest)
+        public AccessControlList getBucketAcl(GetBucketAclRequest getBucketAclRequest)
         {
             String bucketName = getBucketAclRequest.getBucketName();
 
             Request<GetBucketAclRequest> request = createRequest(bucketName, null, getBucketAclRequest, HttpMethodName.GET);
             request.addParameter("acl", null);
 
-            return invoke(request, new CannedAccessControlListUnmarshaller(), bucketName, null);
+            return invoke(request, new AccessControlListUnmarshaller(), bucketName, null);
         }
 
         /**
@@ -159,7 +174,7 @@ namespace KS3
         {
             String bucketName = createBucketRequest.getBucketName();
 
-            Request<CreateBucketRequest> request = createRequest(bucketName, null, createBucketRequest, HttpMethodName.PUT);
+            Request<CreateBucketRequest> request = this.createRequest(bucketName, null, createBucketRequest, HttpMethodName.PUT);
             request.getHeaders()[Headers.CONTENT_LENGTH] = "0";
             
             if (createBucketRequest.getCannedAcl() != null)
@@ -168,6 +183,14 @@ namespace KS3
             this.invoke(request, voidResponseHandler, bucketName, null);
 
             return new Bucket(bucketName);
+        }
+
+        /**
+         * Sets the AccessControlList for the specified KS3 bucket.
+         */
+        public void setBucketAcl(String bucketName, AccessControlList acl)
+        {
+            this.setBucketAcl(new SetBucketAclRequest(bucketName, acl));
         }
 
         /**
@@ -184,11 +207,25 @@ namespace KS3
         public void setBucketAcl(SetBucketAclRequest setBucketAclRequest)
         {
             String bucketName = setBucketAclRequest.getBucketName();
-            Request<SetBucketAclRequest> request = this.createRequest(bucketName, null, setBucketAclRequest, HttpMethodName.PUT);
+            AccessControlList acl = setBucketAclRequest.getAcl();
+            CannedAccessControlList cannedAcl = setBucketAclRequest.getCannedAcl();
 
-            if (setBucketAclRequest.getCannedAcl().getCannedAclHeader() != null)
-                request.addHeader(Headers.KS3_CANNED_ACL, setBucketAclRequest.getCannedAcl().getCannedAclHeader());
-            request.getHeaders()[Headers.CONTENT_LENGTH] = "0";
+            Request<SetBucketAclRequest> request = this.createRequest(bucketName, null, setBucketAclRequest, HttpMethodName.PUT);
+            
+            if (acl != null)
+            {
+                String xml = new AclXmlFactory().convertToXmlString(acl);
+                MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+                
+                request.setContent(memoryStream);
+                request.addHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
+            }
+            else if (cannedAcl != null)
+            {
+                request.addHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
+                request.addHeader(Headers.CONTENT_LENGTH, "0");
+            }
+            request.addParameter("acl", null);
 
             this.invoke(request, this.voidResponseHandler, bucketName, null);
         }
@@ -283,22 +320,25 @@ namespace KS3
             addStringListHeader(request, Headers.GET_OBJECT_IF_NONE_MATCH, getObjectRequest.getNonmatchingETagConstraints());
 
             ProgressListener progressListener = getObjectRequest.getProgressListener();
-            if (progressListener != null)
-                fireProgressEvent(progressListener, ProgressEvent.STARTED_EVENT_CODE);
+
+            fireProgressEvent(progressListener, ProgressEvent.STARTED);
 
             KS3Object ks3Object = null;
             try
             {
                 ks3Object = this.invoke(request, new ObjectResponseHandler(getObjectRequest), bucketName, key);
             }
-            catch (Exception e)
+            catch (InterruptedException e)
             {
-                if (progressListener != null)
-                    fireProgressEvent(progressListener, ProgressEvent.FAILED_EVENT_CODE);
+                fireProgressEvent(progressListener, ProgressEvent.CANCELED);
                 throw e;
             }
-            if (progressListener != null)
-                fireProgressEvent(progressListener, ProgressEvent.COMPLETED_EVENT_CODE);
+            catch (Exception e)
+            {
+                fireProgressEvent(progressListener, ProgressEvent.FAILED);
+                throw e;
+            }
+            fireProgressEvent(progressListener, ProgressEvent.COMPLETED);
 
             ks3Object.setBucketName(bucketName);
             ks3Object.setKey(key);
@@ -376,20 +416,10 @@ namespace KS3
                 if (metadata.getContentType() == null)
                     metadata.setContentType(Mimetypes.getMimetype(file));
 
-                FileStream fileStream = null;
-                try
+                using (FileStream fileStream = file.OpenRead())
                 {
                     MD5 md5 = MD5.Create();
-                    fileStream = file.OpenRead();
                     metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(fileStream)));
-                }
-                catch (Exception e)
-                {
-                    throw new Exception("Unable to calculate MD5 hash: " + e.Message);
-                }
-                finally
-                {
-                    fileStream.Close();
                 }
 
                 input = file.OpenRead();
@@ -407,14 +437,9 @@ namespace KS3
                 if (metadata.getContentType() == null) metadata.setContentType(Mimetypes.DEFAULT_MIMETYPE);
                 if (metadata.getContentMD5() == null)
                 {
-                    try
+                    using(MD5 md5 = MD5.Create())
                     {
-                        MD5 md5 = MD5.Create();
                         metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(input)));
-                    }
-                    catch (Exception e)
-                    {
-                        throw new Exception("Unable to calculate MD5 hash: " + e.Message);
                     }
 
                     input.Seek(0, new SeekOrigin()); // It is needed after calculated MD5.
@@ -426,7 +451,7 @@ namespace KS3
             if (progressListener != null)
             {
                 input = new ProgressReportingInputStream(input, progressListener);
-                fireProgressEvent(progressListener, ProgressEvent.STARTED_EVENT_CODE);
+                fireProgressEvent(progressListener, ProgressEvent.STARTED);
             }
 
             populateRequestMetadata(request, metadata);
@@ -439,9 +464,14 @@ namespace KS3
             {
                 returnedMetadata = this.invoke(request, new MetadataResponseHandler(), bucketName, key);
             }
+            catch (InterruptedException e)
+            {
+                fireProgressEvent(progressListener, ProgressEvent.CANCELED);
+                throw e;
+            }
             catch (Exception e)
             {
-                fireProgressEvent(progressListener, ProgressEvent.FAILED_EVENT_CODE);
+                fireProgressEvent(progressListener, ProgressEvent.FAILED);
                 throw e;
             }
             finally
@@ -449,8 +479,7 @@ namespace KS3
                 input.Close();
             }
 
-            if (progressListener != null)
-                fireProgressEvent(progressListener, ProgressEvent.COMPLETED_EVENT_CODE);
+            fireProgressEvent(progressListener, ProgressEvent.COMPLETED);
 
             PutObjectResult result = new PutObjectResult();
             result.setETag(returnedMetadata.getETag());
@@ -458,6 +487,79 @@ namespace KS3
 
             return result;
         }
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        public AccessControlList getObjectAcl(String bucketName, String key)
+        {
+            return this.getObjectAcl(new GetObjectAclRequest(bucketName, key));
+        }
+
+        /**
+         * Gets the AccessControlList (ACL) for the specified object in KS3.
+         */
+        public AccessControlList getObjectAcl(GetObjectAclRequest getObjectAclRequest)
+        {
+            String bucketName = getObjectAclRequest.getBucketName();
+            String key = getObjectAclRequest.getKey();
+
+            Request<GetObjectAclRequest> request = this.createRequest(bucketName, key, getObjectAclRequest, HttpMethodName.GET);
+            request.addParameter("acl", null);
+
+            return invoke(request, new AccessControlListUnmarshaller(), bucketName, key);
+        }
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        public void setObjectAcl(String bucketName, String key, AccessControlList acl)
+        {
+            this.setObjectAcl(new SetObjectAclRequest(bucketName, key, acl));
+        }
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        public void setObjectAcl(String bucketName, String key, CannedAccessControlList cannedAcl)
+        {
+            this.setObjectAcl(new SetObjectAclRequest(bucketName, key, cannedAcl));
+        }
+
+        /**
+         * Sets the AccessControlList for the specified object in KS3.
+         */
+        public void setObjectAcl(SetObjectAclRequest setObjectAclRequest)
+        {
+            String bucketName = setObjectAclRequest.getBucketName();
+            String key = setObjectAclRequest.getKey();
+            AccessControlList acl = setObjectAclRequest.getAcl();
+            CannedAccessControlList cannedAcl = setObjectAclRequest.getCannedAcl();
+
+            Request<SetObjectAclRequest> request = this.createRequest(bucketName, key, setObjectAclRequest, HttpMethodName.PUT);
+
+            if (acl != null)
+            {
+                String xml = new AclXmlFactory().convertToXmlString(acl);
+                MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+
+                request.setContent(memoryStream);
+                request.addHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
+            }
+            else if (cannedAcl != null)
+            {
+                request.addHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
+                request.addHeader(Headers.CONTENT_LENGTH, "0");
+            }
+            request.addParameter("acl", null);
+
+            this.invoke(request, this.voidResponseHandler, bucketName, key);
+        }
+
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////
+
 
         /**
          * Creates and initializes a new request object for the specified KS3 resource.
@@ -501,7 +603,7 @@ namespace KS3
                 request.addParameter(name, parameters[name]);
             request.setTimeOffset(timeOffset);
 
-            /*
+            /**
              * The string we sign needs to include the exact headers that we
              * send with the request, but the client runtime layer adds the
              * Content-Type header before the request is sent if one isn't set, so
@@ -510,11 +612,11 @@ namespace KS3
             if (!request.getHeaders().ContainsKey(Headers.CONTENT_TYPE))
                 request.addHeader(Headers.CONTENT_TYPE, Mimetypes.DEFAULT_MIMETYPE);
             
-            KS3Credentials credentials = ks3Credentials;
-            KS3Request originalRequest = request.getOriginalRequest();
-            if (originalRequest != null && originalRequest.getRequestCredentials() != null)
-                credentials = originalRequest.getRequestCredentials();
-            request.getOriginalRequest().setRequestCredentials(credentials);
+            /**
+             * Set the credentials which will be used by the KS3Signer later.
+             */
+            if(request.getOriginalRequest().getRequestCredentials() == null)
+                request.getOriginalRequest().setRequestCredentials(this.ks3Credentials);
 
             return client.excute(request, responseHandler, createSigner(request, bucket, key));
         }
@@ -532,7 +634,7 @@ namespace KS3
          */
         private static void fireProgressEvent(ProgressListener listener, int eventType) {
             if (listener == null) return;
-            ProgressEvent e = new ProgressEvent(0, eventType);
+            ProgressEvent e = new ProgressEvent(eventType);
             listener.progressChanged(e);
         }
 

@@ -55,7 +55,7 @@ namespace KS3.Model
 
         public void addHeader(String name, String value)
         {
-            this.headers.Add(name, value);
+            this.headers[name] = value;
         }
 
         public Dictionary<String, String> getHeaders()
@@ -75,7 +75,7 @@ namespace KS3.Model
 
         public void addParameter(String name, String value)
         {
-            this.parameters.Add(name, value);
+            this.parameters[name] = value;
         }
 
         public Dictionary<String, String> getParameters()
