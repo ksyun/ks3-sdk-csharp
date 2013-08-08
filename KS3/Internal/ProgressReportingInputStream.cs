@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 
 using KS3.Model;
+using KS3.KS3Exception;
 
 namespace KS3.Internal
 {
@@ -35,23 +36,46 @@ namespace KS3.Internal
         {
             this.unnotifiedByteCount += bytesRead;
             if (this.unnotifiedByteCount >= NOTIFICATION_THRESHOLD)
-            {
-                listener.progressChanged(new ProgressEvent(this.unnotifiedByteCount, 0));
-                this.unnotifiedByteCount = 0;
-            }
+                this.commit();
+        }
+
+        private void commit()
+        {
+            ProgressEvent e = new ProgressEvent(ProgressEvent.TRANSFERRED);
+            e.setBytesTransferred(this.unnotifiedByteCount);
+
+            listener.progressChanged(e);
+
+            this.unnotifiedByteCount = 0;
         }
 
         public override int ReadByte()
         {
+            if (!this.listener.askContinue())
+            {
+                this.commit();
+                throw new InterruptedException("ProgreesReportingInputStream: ReadByte has been interrupted.");
+            }
+
             int data = this.stream.ReadByte();
             if (data != -1) this.notify(1);
+            else this.commit();
+
             return data;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            if (!this.listener.askContinue())
+            {
+                this.commit();
+                throw new InterruptedException("ProgreesReportingInputStream: Read has been interrupted.");
+            }
+
             int bytesRead =  this.stream.Read(buffer, offset, count);
             if (bytesRead > 0) this.notify(bytesRead);
+            else this.commit();
+
             return bytesRead;
         }
 

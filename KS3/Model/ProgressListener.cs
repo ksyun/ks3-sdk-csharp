@@ -12,5 +12,11 @@ namespace KS3.Model
          * transfer failed, etc.
          */
         void progressChanged(ProgressEvent progressEvent);
+
+        /**
+         * Called before to do the progress.
+         * Ask whether to continue the progress. 
+         */
+        bool askContinue();
     }
 }

@@ -10,6 +10,7 @@ using KS3.Auth;
 using KS3.Http;
 using KS3.Internal;
 using KS3.Transform;
+using KS3.KS3Exception;
 
 namespace KS3
 {
@@ -319,22 +320,25 @@ namespace KS3
             addStringListHeader(request, Headers.GET_OBJECT_IF_NONE_MATCH, getObjectRequest.getNonmatchingETagConstraints());
 
             ProgressListener progressListener = getObjectRequest.getProgressListener();
-            if (progressListener != null)
-                fireProgressEvent(progressListener, ProgressEvent.STARTED_EVENT_CODE);
+
+            fireProgressEvent(progressListener, ProgressEvent.STARTED);
 
             KS3Object ks3Object = null;
             try
             {
                 ks3Object = this.invoke(request, new ObjectResponseHandler(getObjectRequest), bucketName, key);
             }
-            catch (Exception e)
+            catch (InterruptedException e)
             {
-                if (progressListener != null)
-                    fireProgressEvent(progressListener, ProgressEvent.FAILED_EVENT_CODE);
+                fireProgressEvent(progressListener, ProgressEvent.CANCELED);
                 throw e;
             }
-            if (progressListener != null)
-                fireProgressEvent(progressListener, ProgressEvent.COMPLETED_EVENT_CODE);
+            catch (Exception e)
+            {
+                fireProgressEvent(progressListener, ProgressEvent.FAILED);
+                throw e;
+            }
+            fireProgressEvent(progressListener, ProgressEvent.COMPLETED);
 
             ks3Object.setBucketName(bucketName);
             ks3Object.setKey(key);
@@ -412,20 +416,10 @@ namespace KS3
                 if (metadata.getContentType() == null)
                     metadata.setContentType(Mimetypes.getMimetype(file));
 
-                FileStream fileStream = null;
-                try
+                using (FileStream fileStream = file.OpenRead())
                 {
                     MD5 md5 = MD5.Create();
-                    fileStream = file.OpenRead();
                     metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(fileStream)));
-                }
-                catch (Exception e)
-                {
-                    throw new Exception("Unable to calculate MD5 hash: " + e.Message);
-                }
-                finally
-                {
-                    fileStream.Close();
                 }
 
                 input = file.OpenRead();
@@ -443,14 +437,9 @@ namespace KS3
                 if (metadata.getContentType() == null) metadata.setContentType(Mimetypes.DEFAULT_MIMETYPE);
                 if (metadata.getContentMD5() == null)
                 {
-                    try
+                    using(MD5 md5 = MD5.Create())
                     {
-                        MD5 md5 = MD5.Create();
                         metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(input)));
-                    }
-                    catch (Exception e)
-                    {
-                        throw new Exception("Unable to calculate MD5 hash: " + e.Message);
                     }
 
                     input.Seek(0, new SeekOrigin()); // It is needed after calculated MD5.
@@ -462,7 +451,7 @@ namespace KS3
             if (progressListener != null)
             {
                 input = new ProgressReportingInputStream(input, progressListener);
-                fireProgressEvent(progressListener, ProgressEvent.STARTED_EVENT_CODE);
+                fireProgressEvent(progressListener, ProgressEvent.STARTED);
             }
 
             populateRequestMetadata(request, metadata);
@@ -475,9 +464,14 @@ namespace KS3
             {
                 returnedMetadata = this.invoke(request, new MetadataResponseHandler(), bucketName, key);
             }
+            catch (InterruptedException e)
+            {
+                fireProgressEvent(progressListener, ProgressEvent.CANCELED);
+                throw e;
+            }
             catch (Exception e)
             {
-                fireProgressEvent(progressListener, ProgressEvent.FAILED_EVENT_CODE);
+                fireProgressEvent(progressListener, ProgressEvent.FAILED);
                 throw e;
             }
             finally
@@ -485,8 +479,7 @@ namespace KS3
                 input.Close();
             }
 
-            if (progressListener != null)
-                fireProgressEvent(progressListener, ProgressEvent.COMPLETED_EVENT_CODE);
+            fireProgressEvent(progressListener, ProgressEvent.COMPLETED);
 
             PutObjectResult result = new PutObjectResult();
             result.setETag(returnedMetadata.getETag());
@@ -641,7 +634,7 @@ namespace KS3
          */
         private static void fireProgressEvent(ProgressListener listener, int eventType) {
             if (listener == null) return;
-            ProgressEvent e = new ProgressEvent(0, eventType);
+            ProgressEvent e = new ProgressEvent(eventType);
             listener.progressChanged(e);
         }
 

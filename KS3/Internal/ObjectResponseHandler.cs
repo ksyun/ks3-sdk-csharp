@@ -23,6 +23,7 @@ namespace KS3.Internal
         {
             KS3Object ks3Object = new KS3Object();
             FileInfo destinationFile = getObjectRequest.getDestinationFile();
+            ProgressListener progressListener = getObjectRequest.getProgressListener();
 
             ObjectMetadata metadata = new ObjectMetadata();
             RestUtils.populateObjectMetadata(response, metadata);
@@ -30,8 +31,8 @@ namespace KS3.Internal
 
             Stream input = response.GetResponseStream();
 
-            if (destinationFile != null)
-                input = new ProgressReportingInputStream(response.GetResponseStream(), getObjectRequest.getProgressListener());
+            if (progressListener != null)
+                input = new ProgressReportingInputStream(input, progressListener);
 
             int SIZE = Constants.DEFAULT_STREAM_BUFFER_SIZE;
             byte[] buf = new byte[SIZE];
