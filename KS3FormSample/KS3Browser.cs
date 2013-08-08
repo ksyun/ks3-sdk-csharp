@@ -332,7 +332,6 @@ namespace KS3FormSample
          */
         private void start()
         {
-            
             PutObjectRequest putObjectRequest = new PutObjectRequest(this.bucketName, this.file.Name, this.file);
             putObjectRequest.setProgressListener(this);
 

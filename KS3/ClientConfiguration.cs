@@ -12,8 +12,11 @@ namespace KS3
         /*
          * The default time-out value in milliseconds for the GetResponse and 
          * GetRequestStream methods of the HttpWebRequest.
+         * 
+         * To specify the amount of time to wait for the request to complete,
+         * use the Timeout property.
          */
-        public static int DEFAULT_TIMEOUT = 60 * 1000;
+        public static int DEFAULT_TIMEOUT = 15 * 60 * 1000;
 
         /** The default max connection pool size. */
         public static int DEFAULT_MAX_CONNECTIONS = 20;
