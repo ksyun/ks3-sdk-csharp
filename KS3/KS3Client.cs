@@ -573,6 +573,12 @@ namespace KS3
             Request<X> request = new DefaultRequest<X>(originalRequest);
             request.setHttpMethod(httpMethod);
             request.setEndpoint(endpoint);
+
+            if (bucketName != null)
+                bucketName = UrlEncoder.encode(bucketName, Constants.DEFAULT_ENCODING);
+            if (key != null)
+                key = UrlEncoder.encode(key, Constants.DEFAULT_ENCODING);
+
             if (bucketName != null) request.setResourcePath(bucketName + "/" + (key != null ? key : ""));
             return request;
         }
@@ -623,6 +629,11 @@ namespace KS3
 
         private KS3Signer<T> createSigner<T>(Request<T> request, String bucketName, String key) where T : KS3Request
         {
+            if (bucketName != null)
+                bucketName = UrlEncoder.encode(bucketName, Constants.DEFAULT_ENCODING);
+            if (key != null)
+                key = UrlEncoder.encode(key, Constants.DEFAULT_ENCODING);
+
             String resourcePath = "/" + (bucketName != null ? bucketName + "/" : "") + (key != null ? key : "");
             return new KS3Signer<T>(request.getHttpMethod().ToString(), resourcePath);
         }
