@@ -73,7 +73,7 @@ namespace KS3.Http
                 {
                     request.setParameters(originalParameters);
                     request.setHeaders(originalHeaders);
-                    if (request.getContent() != null) request.getContent().Seek(0, new SeekOrigin());
+                    if (request.getContent() != null) request.getContent().Seek(0, SeekOrigin.Begin);
                 }
 
                 HttpWebRequest httpRequest = null;

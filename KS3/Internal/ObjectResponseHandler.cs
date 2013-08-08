@@ -22,43 +22,57 @@ namespace KS3.Internal
         public KS3Object handle(HttpWebResponse response)
         {
             KS3Object ks3Object = new KS3Object();
+
             FileInfo destinationFile = getObjectRequest.getDestinationFile();
+            byte[] content = null;
+            
             ProgressListener progressListener = getObjectRequest.getProgressListener();
 
             ObjectMetadata metadata = new ObjectMetadata();
             RestUtils.populateObjectMetadata(response, metadata);
             ks3Object.setObjectMetadata(metadata);
 
-            Stream input = response.GetResponseStream();
+            Stream input = null, output = null;
 
-            if (progressListener != null)
-                input = new ProgressReportingInputStream(input, progressListener);
+            try
+            {
+                input = response.GetResponseStream();
 
-            int SIZE = Constants.DEFAULT_STREAM_BUFFER_SIZE;
-            byte[] buf = new byte[SIZE];
-            byte[] content = null;
+                if (progressListener != null)
+                    input = new ProgressReportingInputStream(input, progressListener);
 
-            Stream output = null;
+                int SIZE = Constants.DEFAULT_STREAM_BUFFER_SIZE;
+                byte[] buf = new byte[SIZE];
+                
+
+                if (destinationFile != null)
+                    output = getObjectRequest.getDestinationFile().OpenWrite();
+                else
+                {
+                    content = new byte[metadata.getContentLength()];
+                    output = new MemoryStream(content);
+                }
+
+                for (; ; )
+                {
+                    int size = input.Read(buf, 0, SIZE);
+                    if (size <= 0) break;
+                    output.Write(buf, 0, size);
+                }
+            }
+            finally
+            {
+                if (input != null)
+                    input.Close();
+
+                if (output != null)
+                    output.Close();
+            }
+
             if (destinationFile != null)
-                output = getObjectRequest.getDestinationFile().OpenWrite();
+                ks3Object.setObjectContent(destinationFile.OpenRead());
             else
-            {
-                content = new byte[metadata.getContentLength()];
-                output = new MemoryStream(content);
-            }
-
-            for (; ; )
-            {
-                int size = input.Read(buf, 0, SIZE);
-                if (size <= 0) break;
-                output.Write(buf, 0, size);
-            }
-            input.Close();
-            output.Flush();
-            output.Close();
-
-            if (destinationFile != null) ks3Object.setObjectContent(destinationFile.OpenRead());
-            else ks3Object.setObjectContent(new MemoryStream(content));
+                ks3Object.setObjectContent(new MemoryStream(content));
 
             return ks3Object;
         }

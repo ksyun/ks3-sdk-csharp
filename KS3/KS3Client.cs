@@ -442,7 +442,7 @@ namespace KS3
                         metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(input)));
                     }
 
-                    input.Seek(0, new SeekOrigin()); // It is needed after calculated MD5.
+                    input.Seek(0, SeekOrigin.Begin); // It is needed after calculated MD5.
                 }
             }
             
@@ -476,7 +476,8 @@ namespace KS3
             }
             finally
             {
-                input.Close();
+                if (input != null)
+                    input.Close();
             }
 
             fireProgressEvent(progressListener, ProgressEvent.COMPLETED);
