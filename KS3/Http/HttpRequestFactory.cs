@@ -56,8 +56,6 @@ namespace KS3.Http
                     requestStream.Write(buf, 0, size);
                 }
 
-                inputStream.Close();
-
                 requestStream.Flush();
                 requestStream.Close();
             }

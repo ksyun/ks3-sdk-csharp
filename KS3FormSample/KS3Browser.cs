@@ -203,6 +203,9 @@ namespace KS3FormSample
                     String bucketName = obj.ToString().Trim();
 
                     SaveFileDialog dialog = new SaveFileDialog();
+                    dialog.RestoreDirectory = true;
+                    dialog.FileName = key;
+
                     if (dialog.ShowDialog() == DialogResult.OK)
                     {
                         if (!File.Exists(dialog.FileName))
@@ -381,11 +384,23 @@ namespace KS3FormSample
             return !this.cancled;
         }
 
+        private delegate void ProgressChangedHandler(ProgressEvent progressEvent);
+
         /**
          * 实现的ProgressListener的接口，处理IO线程反馈回来的消息
          */
         public void progressChanged(ProgressEvent progressEvent)
         {
+            
+            /**
+             * 用线程安全的方式重绘界面
+             */
+            if (this.resultLabel.InvokeRequired)
+            {
+                this.Invoke(new ProgressChangedHandler(progressChanged), new object[] { progressEvent });
+                return;
+            }
+
             int eventCode = progressEvent.getEventCode();
             if (eventCode == ProgressEvent.STARTED)
                 this.resultLabel.Text = "正在进行中";
@@ -542,11 +557,22 @@ namespace KS3FormSample
             return !this.cancled;
         }
 
+        private delegate void ProgressChangedHandler(ProgressEvent progressEvent);
+
         /**
          * 实现的ProgressListener的接口，处理IO线程反馈回来的消息
          */
         public void progressChanged(ProgressEvent progressEvent)
         {
+            /**
+             * 用线程安全的方式重绘界面
+             */
+            if (this.resultLabel.InvokeRequired)
+            {
+                this.Invoke(new ProgressChangedHandler(progressChanged), new object[] { progressEvent });
+                return;
+            }
+
             int eventCode = progressEvent.getEventCode();
             if (eventCode == ProgressEvent.STARTED)
                 this.resultLabel.Text = "正在进行中";

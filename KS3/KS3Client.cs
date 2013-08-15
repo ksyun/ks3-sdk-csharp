@@ -442,7 +442,7 @@ namespace KS3
                         metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(input)));
                     }
 
-                    input.Seek(0, new SeekOrigin()); // It is needed after calculated MD5.
+                    input.Seek(0, SeekOrigin.Begin); // It is needed after calculated MD5.
                 }
             }
             
@@ -476,7 +476,8 @@ namespace KS3
             }
             finally
             {
-                input.Close();
+                if (input != null)
+                    input.Close();
             }
 
             fireProgressEvent(progressListener, ProgressEvent.COMPLETED);
@@ -573,6 +574,12 @@ namespace KS3
             Request<X> request = new DefaultRequest<X>(originalRequest);
             request.setHttpMethod(httpMethod);
             request.setEndpoint(endpoint);
+
+            if (bucketName != null)
+                bucketName = UrlEncoder.encode(bucketName, Constants.DEFAULT_ENCODING);
+            if (key != null)
+                key = UrlEncoder.encode(key, Constants.DEFAULT_ENCODING);
+
             if (bucketName != null) request.setResourcePath(bucketName + "/" + (key != null ? key : ""));
             return request;
         }
@@ -623,6 +630,11 @@ namespace KS3
 
         private KS3Signer<T> createSigner<T>(Request<T> request, String bucketName, String key) where T : KS3Request
         {
+            if (bucketName != null)
+                bucketName = UrlEncoder.encode(bucketName, Constants.DEFAULT_ENCODING);
+            if (key != null)
+                key = UrlEncoder.encode(key, Constants.DEFAULT_ENCODING);
+
             String resourcePath = "/" + (bucketName != null ? bucketName + "/" : "") + (key != null ? key : "");
             return new KS3Signer<T>(request.getHttpMethod().ToString(), resourcePath);
         }

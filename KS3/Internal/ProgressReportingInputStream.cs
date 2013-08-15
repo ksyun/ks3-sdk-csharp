@@ -130,5 +130,10 @@ namespace KS3.Internal
         {
             this.stream.Flush();
         }
+
+        public override void Close()
+        {
+            this.stream.Close();
+        }
     }
 }

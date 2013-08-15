@@ -71,7 +71,7 @@ namespace KS3.KS3Exception
         public override string ToString()
         {
             return String.Join("\n", new List<String> {
-                   "KS3ServerException:",
+                   "ServiceException:",
                    "Status Code: " + this.getStatusCode(),
                    "Request ID: " + this.getRequestId(),
                    "Error Code: " + this.getErrorCode(),
