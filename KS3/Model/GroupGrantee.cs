@@ -6,10 +6,8 @@ using System.Text;
 namespace KS3.Model
 {
     /**
-     * Specifies constants defining a group of KS3 users 
-     * who can be granted permissions to
-     * KS3 buckets and objects. This enumeration contains all the valid KS3
-     * group grantees.
+     * Specifies constants defining a group of KS3 users who can be granted
+     * permissions to KS3 buckets and objects.
      */
     public class GroupGrantee : Grantee
     {
@@ -18,7 +16,7 @@ namespace KS3.Model
          * be able to access the object by omitting the KS3 Key ID and Signature
          * from a request.
          */
-        public static string AllUsers = "http://acs.ksyun.com/groups/global/AllUsers";
+        public static string ALL_USERS = "http://acs.ksyun.com/groups/global/AllUsers";
 
         private String groupUri;
 

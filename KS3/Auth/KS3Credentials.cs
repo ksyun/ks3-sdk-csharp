@@ -13,12 +13,12 @@ namespace KS3.Auth
     public interface KS3Credentials
     {
         /**
-         * Returns the AWS access key ID for this credentials object.
+         * Returns the KS3 access key ID for this credentials object.
          */
         String getKS3AccessKeyId();
         
         /**
-         * Returns the AWS secret access key for this credentials object.
+         * Returns the KS3 secret access key for this credentials object.
          */ 
         String getKS3SecretKey();
     }

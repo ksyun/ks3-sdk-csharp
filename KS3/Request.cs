@@ -12,14 +12,14 @@ namespace KS3
     public interface Request<T>
     {
         /**
-         * Adds the specified header to this request.
+         * Sets the specified header to this request.
          */
-        void addHeader(String name, String value);
+        void setHeader(String name, String value);
         
         /**
          * Returns a map of all the headers included in this request.
          */
-        Dictionary<String, String> getHeaders();
+        IDictionary<String, String> getHeaders();
 
         /**
          * Sets all headers, clearing any existing ones.
@@ -37,14 +37,14 @@ namespace KS3
         String getResourcePath();
 
         /**
-         * Adds the specified request parameter to this request.
+         * Sets the specified request parameter to this request.
          */
-        void addParameter(String name, String value);
+        void setParameter(String name, String value);
 
         /**
          * Returns a map of all parameters in this request.
          */
-        Dictionary<String, String> getParameters();
+        IDictionary<String, String> getParameters();
 
         /**
          * Sets all parameters, clearing any existing values.
@@ -65,12 +65,12 @@ namespace KS3
 	     * Returns the HTTP method (GET, POST, etc) to use when sending this
 	     * request.
 	     */ 
-        HttpMethodName getHttpMethod();
+        HttpMethod getHttpMethod();
 
 	    /**
 	     * Sets the HTTP method (GET, POST, etc) to use when sending this request.
          */
-        void setHttpMethod(HttpMethodName httMethod);
+        void setHttpMethod(HttpMethod httMethod);
 	    
         /**
 	     * Returns the optional stream containing the payload data to include for

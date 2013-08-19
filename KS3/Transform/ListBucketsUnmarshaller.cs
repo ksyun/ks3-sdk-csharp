@@ -10,19 +10,16 @@ using System.Xml;
 
 namespace KS3.Transform
 {
-    public class ListBucketsUnmarshaller : Unmarshaller<List<Bucket>, Stream>
+    public class ListBucketsUnmarshaller : Unmarshaller<IList<Bucket>, Stream>
     {
-        public List<Bucket> unmarshall(Stream inputStream)
+        public IList<Bucket> unmarshall(Stream inputStream)
         {
-            //Console.WriteLine((new StreamReader(inputStream)).ReadToEnd());
-            //return null;
-
             Owner bucketsOwner = null;
             Bucket curBucket = null;
-            StringBuilder curText = new StringBuilder();
-            List<Bucket> buckets = new List<Bucket>();
+            StringBuilder currText = new StringBuilder();
+            IList<Bucket> buckets = new List<Bucket>();
             
-            XmlReader xr = XmlReader.Create(new BufferedStream(UnmarshallerUtils.sanitizeXmlDocument(inputStream)));
+            XmlReader xr = XmlReader.Create(new BufferedStream(inputStream));
             while (xr.Read())
             {
                 if (xr.NodeType.Equals(XmlNodeType.Element))
@@ -32,20 +29,20 @@ namespace KS3.Transform
                 }
                 else if (xr.NodeType.Equals(XmlNodeType.EndElement))
                 {
-                    if (xr.Name.Equals("DisplayName")) bucketsOwner.setDisplayName(curText.ToString());
-                    else if (xr.Name.Equals("ID")) bucketsOwner.setId(curText.ToString());
-                    else if (xr.Name.Equals("CreationDate")) curBucket.setCreationDate(DateTime.Parse(curText.ToString()));
-                    else if (xr.Name.Equals("Name")) curBucket.setName(curText.ToString());
+                    if (xr.Name.Equals("DisplayName")) bucketsOwner.setDisplayName(currText.ToString());
+                    else if (xr.Name.Equals("ID")) bucketsOwner.setId(currText.ToString());
+                    else if (xr.Name.Equals("CreationDate")) curBucket.setCreationDate(DateTime.Parse(currText.ToString()));
+                    else if (xr.Name.Equals("Name")) curBucket.setName(currText.ToString());
                     else if (xr.Name.Equals("Bucket"))
                     {
                         curBucket.setOwner(bucketsOwner);
                         buckets.Add(curBucket);
                     }
-                    curText.Clear();
+                    currText.Clear();
                 }
                 else if (xr.NodeType.Equals(XmlNodeType.Text))
                 {
-                    curText.Append(xr.Value);
+                    currText.Append(xr.Value);
                 }
 
             }

@@ -5,6 +5,9 @@ using System.Text;
 
 namespace KS3.Model
 {
+    /**
+     * Request object containing all the options for setting a bucket's Access Control List (ACL).
+     */
     public class SetBucketAclRequest : KS3Request
     {
         /** The name of the bucket whose ACL is being set. */
@@ -38,6 +41,10 @@ namespace KS3.Model
             this.cannedAcl = cannedAcl;
         }
 
+	    /**
+	     * Returns the name of the bucket whose ACL will be modified by this request
+	     * when executed.
+         */
         public String getBucketName()
         {
             return this.bukcetName;

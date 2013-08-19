@@ -37,7 +37,7 @@ namespace KS3.Model
          * Internal only method for accessing private, internal request parameters.
          * Not intended for direct use by callers.
          */
-        public Dictionary<String, String> copyPrivateRequestParameters()
+        public IDictionary<String, String> copyPrivateRequestParameters()
         {
             return new Dictionary<String, String>();
         }

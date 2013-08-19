@@ -54,7 +54,7 @@ namespace KS3.Internal
             if (!this.listener.askContinue())
             {
                 this.commit();
-                throw new InterruptedException("ProgreesReportingInputStream: ReadByte has been interrupted.");
+                throw new ProgressInterruptedException("ProgreesReportingInputStream: ReadByte has been interrupted.");
             }
 
             int data = this.stream.ReadByte();
@@ -69,7 +69,7 @@ namespace KS3.Internal
             if (!this.listener.askContinue())
             {
                 this.commit();
-                throw new InterruptedException("ProgreesReportingInputStream: Read has been interrupted.");
+                throw new ProgressInterruptedException("ProgreesReportingInputStream: Read has been interrupted.");
             }
 
             int bytesRead =  this.stream.Read(buffer, offset, count);
@@ -129,11 +129,17 @@ namespace KS3.Internal
         public override void Flush()
         {
             this.stream.Flush();
+
+            if (this.unnotifiedByteCount > 0)
+                this.commit();
         }
 
         public override void Close()
         {
             this.stream.Close();
+
+            if (this.unnotifiedByteCount > 0)
+                this.commit();
         }
     }
 }

@@ -13,90 +13,112 @@ namespace KS3.Transform
     {
         public ObjectListing unmarshall(Stream inputStream)
         {
-            //Console.WriteLine((new StreamReader(inputStream)).ReadToEnd());
-            //return null;
-            
-            KS3ObjectSummary curObject = null;
-            Owner curOwner = null;
-            StringBuilder curText = new StringBuilder();
+            ObjectSummary currObject = null;
+            Owner currOwner = null;
+            StringBuilder currText = new StringBuilder();
             Boolean insideCommonPrefixes = false;
 
             ObjectListing objectListing = new ObjectListing();
 
             String bucketName = null;
             String lastKey = null;
+            Boolean truncated = false;
             String nextMarker = null;
             
-            XmlReader xr = XmlReader.Create(new BufferedStream(UnmarshallerUtils.sanitizeXmlDocument(inputStream)));
+            XmlReader xr = XmlReader.Create(new BufferedStream(inputStream));
             while (xr.Read())
             {
                 if (xr.NodeType.Equals(XmlNodeType.Element))
                 {
-                    if (xr.Name.Equals("Contents")) curObject = new KS3ObjectSummary();
-                    else if (xr.Name.Equals("CommonPrefixes")) insideCommonPrefixes = true;
-                    else if (xr.Name.Equals("Owner")) curOwner = new Owner();
+                    if (xr.Name.Equals("Contents"))
+                        currObject = new ObjectSummary();
+                    else if (xr.Name.Equals("CommonPrefixes"))
+                        insideCommonPrefixes = true;
+                    else if (xr.Name.Equals("Owner"))
+                        currOwner = new Owner();
                     
                 }
                 else if (xr.NodeType.Equals(XmlNodeType.EndElement))
                 {
-                    if (xr.Name.Equals("Name")) bucketName = curText.ToString();
+                    if (xr.Name.Equals("Name"))
+                        bucketName = currText.ToString();
                     else if (xr.Name.Equals("Delimiter"))
                     {
-                        String s = curText.ToString();
-                        if (s.Length > 0) objectListing.setDelimiter(s);
+                        String s = currText.ToString();
+                        if (s.Length > 0)
+                            objectListing.setDelimiter(s);
                     }
                     else if (xr.Name.Equals("MaxKeys"))
                     {
-                        String s = curText.ToString();
-                        if (s.Length > 0) objectListing.setMaxKeys(int.Parse(curText.ToString()));
+                        String s = currText.ToString();
+                        if (s.Length > 0)
+                            objectListing.setMaxKeys(int.Parse(currText.ToString()));
                     }
                     else if (xr.Name.Equals("Prefix"))
                     {
-                        if (insideCommonPrefixes) objectListing.getCommonPrefixes().Add(curText.ToString());
+                        if (insideCommonPrefixes)
+                            objectListing.getCommonPrefixes().Add(currText.ToString());
                         else
                         {
-                            String s = curText.ToString();
-                            if (s.Length > 0) objectListing.setPrefix(s);
+                            String s = currText.ToString();
+                            if (s.Length > 0)
+                                objectListing.setPrefix(s);
                         }
                     }
                     else if (xr.Name.Equals("Marker"))
                     {
-                        String s = curText.ToString();
-                        if (s.Length > 0) objectListing.setMarker(s);
+                        String s = currText.ToString();
+                        if (s.Length > 0)
+                            objectListing.setMarker(s);
                     }
-                    else if (xr.Name.Equals("NextMarker")) nextMarker = curText.ToString();
-                    else if (xr.Name.Equals("IsTruncated")) objectListing.setTruncated(Boolean.Parse(curText.ToString()));
+                    else if (xr.Name.Equals("NextMarker"))
+                        nextMarker = currText.ToString();
+                    else if (xr.Name.Equals("IsTruncated"))
+                    {
+                        truncated = Boolean.Parse(currText.ToString());
+                        objectListing.setTruncated(truncated);
+                    }
                     else if (xr.Name.Equals("Contents"))
                     {
-                        curObject.setBucketName(bucketName);
-                        objectListing.getObjectSummaries().Add(curObject);
+                        currObject.setBucketName(bucketName);
+                        objectListing.getObjectSummaries().Add(currObject);
                     }
-                    else if (xr.Name.Equals("Owner")) curObject.setOwner(curOwner);
-                    else if (xr.Name.Equals("DisplayName")) curOwner.setDisplayName(curText.ToString());
-                    else if (xr.Name.Equals("ID")) curOwner.setId(curText.ToString());
-                    else if (xr.Name.Equals("LastModified")) curObject.setLastModified(DateTime.Parse(curText.ToString()));
-                    else if (xr.Name.Equals("ETag")) curObject.setETag(curText.ToString());
-                    else if (xr.Name.Equals("CommonPrefixes")) insideCommonPrefixes = false;
+                    else if (xr.Name.Equals("Owner"))
+                        currObject.setOwner(currOwner);
+                    else if (xr.Name.Equals("DisplayName"))
+                        currOwner.setDisplayName(currText.ToString());
+                    else if (xr.Name.Equals("ID"))
+                        currOwner.setId(currText.ToString());
+                    else if (xr.Name.Equals("LastModified"))
+                        currObject.setLastModified(DateTime.Parse(currText.ToString()));
+                    else if (xr.Name.Equals("ETag"))
+                        currObject.setETag(currText.ToString());
+                    else if (xr.Name.Equals("CommonPrefixes"))
+                        insideCommonPrefixes = false;
                     else if (xr.Name.Equals("Key"))
                     {
-                        lastKey = curText.ToString();
-                        curObject.setKey(lastKey);
+                        lastKey = currText.ToString();
+                        currObject.setKey(lastKey);
                     }
-                    else if (xr.Name.Equals("Size")) curObject.setSize(long.Parse(curText.ToString()));
+                    else if (xr.Name.Equals("Size"))
+                        currObject.setSize(long.Parse(currText.ToString()));
 
-                    curText.Clear();
+                    currText.Clear();
                 }
                 else if (xr.NodeType.Equals(XmlNodeType.Text))
                 {
-                    curText.Append(xr.Value);
+                    currText.Append(xr.Value);
                 }
             }
             
             objectListing.setBucketName(bucketName);
 
-            if (nextMarker == null && lastKey != null)
-                nextMarker = lastKey;
-            objectListing.setNextMarker(nextMarker);
+            if (truncated)
+            {
+                if (nextMarker == null && lastKey != null)
+                    nextMarker = lastKey;
+                objectListing.setNextMarker(nextMarker);
+            }
             
             return objectListing;
         } // end of unmarshall

@@ -13,9 +13,6 @@ namespace KS3.Transform
     {
         public AccessControlList unmarshall(Stream inputStream)
         {
-            //Console.WriteLine((new StreamReader(inputStream)).ReadToEnd());
-            //return null;
-
             AccessControlList acl = new AccessControlList();
             Owner owner = null;
             String ownerId = null;
@@ -26,16 +23,16 @@ namespace KS3.Transform
             String userDisplayName = null;
             String groupUri = null;
             String permission = null;
-            bool inGrant = false;
-            StringBuilder curText = new StringBuilder();
+            bool insideGrant = false;
+            StringBuilder currText = new StringBuilder();
 
-            XmlReader xr = XmlReader.Create(new BufferedStream(UnmarshallerUtils.sanitizeXmlDocument(inputStream)));
+            XmlReader xr = XmlReader.Create(new BufferedStream(inputStream));
             while (xr.Read())
             {
                 if (xr.NodeType.Equals(XmlNodeType.Element))
                 {
                     if (xr.Name.Equals("Grant"))
-                        inGrant = true;
+                        insideGrant = true;
                     else if (xr.Name.Equals("Grantee"))
                         granteeType = xr.GetAttribute("xsi:type");
                 }
@@ -43,20 +40,20 @@ namespace KS3.Transform
                 {
                     if (xr.Name.Equals("DisplayName"))
                     {
-                        if (!inGrant)
-                            ownerId = curText.ToString();
+                        if (!insideGrant)
+                            ownerId = currText.ToString();
                         else
-                            userId = curText.ToString();
+                            userId = currText.ToString();
                     }
                     else if (xr.Name.Equals("ID"))
                     {
-                        if (!inGrant)
-                            ownerDisplayName = curText.ToString();
+                        if (!insideGrant)
+                            ownerDisplayName = currText.ToString();
                         else
-                            userDisplayName = curText.ToString();
+                            userDisplayName = currText.ToString();
                     }
                     else if (xr.Name.Equals("URI"))
-                        groupUri = curText.ToString();
+                        groupUri = currText.ToString();
                     else if (xr.Name.Equals("Owner"))
                     {
                         owner = new Owner(ownerId, ownerDisplayName);
@@ -70,18 +67,18 @@ namespace KS3.Transform
                             grantee = new GroupGrantee(groupUri);
                     }
                     else if (xr.Name.Equals("Permission"))
-                        permission = curText.ToString();
+                        permission = currText.ToString();
                     else if (xr.Name.Equals("Grant"))
                     {
                         acl.grantPermission(grantee, permission);
-                        inGrant = false;
+                        insideGrant = false;
                     }
 
-                    curText.Clear();
+                    currText.Clear();
                 }
                 else if (xr.NodeType.Equals(XmlNodeType.Text))
                 {
-                    curText.Append(xr.Value);
+                    currText.Append(xr.Value);
                 }
             } // end while
 

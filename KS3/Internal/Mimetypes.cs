@@ -8,7 +8,7 @@ namespace KS3.Internal
 {
     public static class Mimetypes
     {
-        private static Dictionary<String, String> mimetypesDictionary =
+        private static IDictionary<String, String> mimetypesDictionary =
             new Dictionary<String, String> {
             {"ai", "application/postscript"},
             {"aif", "audio/x-aiff"},
@@ -207,8 +207,10 @@ namespace KS3.Internal
             string extension = file.Extension;
             if (extension != null)
             {
-                if (extension.StartsWith(".")) extension = extension.Substring(1);
-                if (mimetypesDictionary.ContainsKey(extension)) return mimetypesDictionary[extension];
+                if (extension.StartsWith("."))
+                    extension = extension.Substring(1);
+                if (mimetypesDictionary.ContainsKey(extension))
+                    return mimetypesDictionary[extension];
             }
             return DEFAULT_MIMETYPE;
         }

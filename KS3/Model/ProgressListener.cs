@@ -5,6 +5,9 @@ using System.Text;
 
 namespace KS3.Model
 {
+    /**
+     * Listener interface for transfer progress events.
+     */
     public interface ProgressListener
     {
         /**

@@ -13,17 +13,27 @@ namespace KS3.Model
         private Grantee grantee = null;
         private String permission = null;
 
+        /**
+         * Constructs a new Grant object using the specified grantee and
+         * permission objects.
+         */
         public Grant(Grantee grantee, String permission)
         {
             this.grantee = grantee;
             this.permission = permission;
         }
 
+	    /**
+	     * Gets the grantee being granted a permission by this grant.
+	     */
         public Grantee getGrantee()
         {
             return this.grantee;
         }
 
+	    /**
+	     * Gets the permission being granted to the grantee by this grant.
+	     */
         public String getPermission()
         {
             return this.permission;

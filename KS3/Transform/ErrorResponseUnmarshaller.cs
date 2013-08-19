@@ -13,28 +13,26 @@ namespace KS3.Transform
     {
         public ServiceException unmarshall(Stream inputStream)
         {
-            //Console.WriteLine((new StreamReader(inputStream)).ReadToEnd());
-
             String requestId = null;
             String errorCode = null;
             String message = "Unknow error, no response body.";
             ServiceException serviceException = null;
 
-            StringBuilder curText = new StringBuilder();
-            XmlReader xr = XmlReader.Create(new BufferedStream(UnmarshallerUtils.sanitizeXmlDocument(inputStream)));
+            StringBuilder currText = new StringBuilder();
+            XmlReader xr = XmlReader.Create(new BufferedStream(inputStream));
             while (xr.Read())
             {
                 if (xr.NodeType.Equals(XmlNodeType.EndElement))
                 {
-                    if (xr.Name.Equals("Message")) message = curText.ToString();
-                    else if (xr.Name.Equals("Code")) errorCode = curText.ToString();
-                    else if (xr.Name.Equals("RequestId")) requestId = curText.ToString();
+                    if (xr.Name.Equals("Message")) message = currText.ToString();
+                    else if (xr.Name.Equals("Code")) errorCode = currText.ToString();
+                    else if (xr.Name.Equals("RequestId")) requestId = currText.ToString();
 
-                    curText.Clear();
+                    currText.Clear();
                 }
                 else if (xr.NodeType.Equals(XmlNodeType.Text))
                 {
-                    curText.Append(xr.Value);
+                    currText.Append(xr.Value);
                 }
 
             }

@@ -10,6 +10,10 @@ using KS3.Model;
 
 namespace KS3.Internal
 {
+    /**
+     * KS3 response handler that knows how to pull KS3 object metadata out of a
+     * response and unmarshall it into an ObjectMetadata object.
+     */
     public class MetadataResponseHandler : HttpResponseHandler<ObjectMetadata>
     {
         public ObjectMetadata handle(HttpWebResponse response)
@@ -18,11 +22,6 @@ namespace KS3.Internal
             RestUtils.populateObjectMetadata(response, metadata);
 
             return metadata;
-        } 
-
-        public Boolean needsConnectionLeftOpen()
-        {
-            return false;
         }
     }
 }

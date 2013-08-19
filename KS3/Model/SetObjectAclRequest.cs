@@ -13,12 +13,16 @@ namespace KS3.Model
         /** The key of the object whose ACL is being set. */
         private String key;
 
-        /** The custom ACL to apply to the specified bucket. */
+        /** The custom ACL to apply to the specified object. */
         private AccessControlList acl;
 
-        /** The canned ACL to apply to the specified bucket. */
+        /** The canned ACL to apply to the specified object. */
         private CannedAccessControlList cannedAcl;
 
+        /**
+         * Constructs a new SetObjectAclRequest object, ready to set the specified
+         * ACL on the specified object when this request is executed.
+         */
         public SetObjectAclRequest(String bucketName, String key, AccessControlList acl)
         {
             this.bukcetName = bucketName;
@@ -27,6 +31,10 @@ namespace KS3.Model
             this.cannedAcl = null;
         }
 
+        /**
+         * Constructs a new SetObjectAclRequest object, ready to set the specified
+         * ACL on the specified object when this request is executed.
+         */
         public SetObjectAclRequest(String bucketName, String key, CannedAccessControlList cannedAcl)
         {
             this.bukcetName = bucketName;
@@ -35,21 +43,33 @@ namespace KS3.Model
             this.cannedAcl = cannedAcl;
         }
 
+	    /**
+	     * Returns the name of the bucket whose object's ACL is being set.
+	     */
         public String getBucketName()
         {
             return this.bukcetName;
         }
 
+	    /**
+	     * Returns the key of the object whose ACL is being setting.
+	     */
         public String getKey()
         {
             return this.key;
         }
 
+	    /**
+	     * Returns the custom ACL to apply to the specified object.
+	     */
         public AccessControlList getAcl()
         {
             return this.acl;
         }
 
+	    /**
+	     * Returns the canned ACL to apply to the specified object.
+	     */
         public CannedAccessControlList getCannedAcl()
         {
             return this.cannedAcl;

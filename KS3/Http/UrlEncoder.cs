@@ -7,7 +7,7 @@ using KS3.Internal;
 
 namespace KS3.Http
 {
-    public class UrlEncoder
+    public static class UrlEncoder
     {
         private static String digits = "0123456789ABCDEF";
 
@@ -40,7 +40,7 @@ namespace KS3.Http
             if (start >= 0)
                 convert(s.Substring(start, s.Length - start), builder, encoding);
 
-            return builder.ToString().Trim().Replace("+", "%20").Replace("*", "%2A");
+            return builder.ToString().Trim().Replace("+", "%20").Replace("*", "%2A").Replace("%2F", "/");
         }
 
         private static void convert(String s, StringBuilder builder, Encoding encoding)

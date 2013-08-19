@@ -19,6 +19,7 @@ namespace KS3
         public static String SERVER = "Server";
         public static String USER_AGENT = "User-Agent";
         public static String HOST = "Host";
+        public static String CONNECTION = "Connection";
 
         /** Prefix for general KS3 headers: x-kss- */
         public static String KS3_PREFIX = "x-kss-";

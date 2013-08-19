@@ -6,22 +6,17 @@ using System.Text;
 namespace KS3.Model
 {
     /**
-     * Represents a grantee identified by their canonical KS3 ID.
-     * The canonical KS3 ID can be thought of as
-     * an KS3-internal ID specific to a user. For
-     * example, Amazon can map a grantee identified by an email address to a
-     * canonical ID.
-     * <p>
-     * Canonical grantees may have an associated display name, which is a
-     * human-friendly name that KS3 has linked to the canonical ID (eg. the user's
-     * login name).
-     * </p>
+     * Represents a grantee identified by their canonical KS3 ID. The canonical KS3
+     * ID can be thought of as an KS3-internal ID specific to a user.
      */
     public class CanonicalGrantee : Grantee
     {
         private String id = null;
         private String displayName = null;
 
+        /**
+         * Constructs a new CanonicalGrantee object with the given canonical ID.
+         */
         public CanonicalGrantee(String id)
         {
             this.id = id;

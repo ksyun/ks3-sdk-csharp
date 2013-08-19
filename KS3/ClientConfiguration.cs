@@ -18,26 +18,17 @@ namespace KS3
          */
         public static int DEFAULT_TIMEOUT = 15 * 60 * 1000;
 
-        /** The default max connection pool size. */
-        public static int DEFAULT_MAX_CONNECTIONS = 20;
-
         /** The default timeout for a connected socket. */
         public static int DEFAULT_READ_WRITE_TIMEOUT = 15 * 60 * 1000;
+
+        /** The default max connection pool size. */
+        public static int DEFAULT_MAX_CONNECTIONS = 20;
 
         /** The default HTTP user agent header. */
         public static String DEFAULT_USER_AGENT = "KS3 User";
 
-        /** The default maximum number of retries for error responses. */
-        public static int DEFAULT_MAX_RETRIES = 3;
-
         /** The HTTP user agent header passed with all HTTP requests. */
         private String userAgent = DEFAULT_USER_AGENT;
-
-        /**
-         * The maximum number of times that a retryable failed request (ex: a 5xx
-         * response from a service) will be retried.
-         */
-        private int maxErrorRetry = DEFAULT_MAX_RETRIES;
 
         /**
          * The protocol to use when connecting to KS3.
@@ -76,7 +67,6 @@ namespace KS3
 
         public ClientConfiguration(ClientConfiguration other) {
             this.userAgent = other.userAgent;
-            this.maxErrorRetry = other.maxErrorRetry;
             this.protocol = other.protocol;
             this.proxyHost = other.proxyHost;
             this.proxyPort = other.proxyPort;
@@ -85,7 +75,6 @@ namespace KS3
             this.maxConnections = other.maxConnections;
             this.timeout = other.timeout;
             this.readWriteTimeout = other.readWriteTimeout;
-            
         }
 
         /**
@@ -202,24 +191,6 @@ namespace KS3
         public void setProxyPassword(String proxyPassword)
         {
             this.proxyPassword = proxyPassword;
-        }
-
-        /**
-         * Returns the maximum number of retry attempts for failed retryable
-         * requests (ex: 5xx error responses from a service).
-         */
-        public int getMaxErrorRetry()
-        {
-            return this.maxErrorRetry;
-        }
-
-        /**
-         * Sets the maximum number of retry attempts for failed retryable requests
-         * (ex: 5xx error responses from services).
-         */
-        public void setMaxErrorRetry(int maxErrorRetry)
-        {
-            this.maxErrorRetry = maxErrorRetry;
         }
 
         /** Returns the ReadWriteTimeout of the HttpWebRequest. */

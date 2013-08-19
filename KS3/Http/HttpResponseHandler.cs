@@ -14,23 +14,5 @@ namespace KS3.Http
          * need to, and return any type that they need to.
          */
         T handle(HttpWebResponse response);
-
-        /**
-         * Indicates if this response handler requires that the underlying HTTP
-         * connection <b>not</b> be closed automatically after the response is
-         * handled.
-         * <p>
-         * For example, if the object returned by this response handler manually
-         * manages the stream of data from the HTTP connection, and doesn't read all
-         * the data from the connection in the {@link #handle(HttpResponse)} method,
-         * this method can be used to prevent the underlying connection from being
-         * prematurely closed.
-         * <p>
-         * Response handlers should use this option very carefully, since it means
-         * that resource cleanup is no longer handled automatically, and if
-         * neglected, can result in the client runtime running out of resources for
-         * new HTTP connections.
-         */
-        Boolean needsConnectionLeftOpen();
     }
 }

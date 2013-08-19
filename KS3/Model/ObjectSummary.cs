@@ -5,7 +5,11 @@ using System.Text;
 
 namespace KS3.Model
 {
-    public class KS3ObjectSummary
+    /**
+     * Contains the summary of an object stored in an KS3 bucket. This object
+     * doesn't contain contain the object's full metadata or any of its contents.
+     */
+    public class ObjectSummary
     {
         /** The name of the bucket in which this object is stored */
         private String bucketName;
@@ -28,11 +32,17 @@ namespace KS3.Model
          */
         private Owner owner;
 
+	    /**
+	     * Gets the name of the KS3 bucket in which this object is stored.
+	     */
         public String getBucketName()
         {
             return this.bucketName;
         }
 
+	    /**
+	     * Sets the name of the KS3 bucket in which this object is stored.
+	     */
         public void setBucketName(String bucketName)
         {
             this.bucketName = bucketName;
@@ -54,41 +64,68 @@ namespace KS3.Model
             this.key = key;
         }
 
+	    /**
+	     * Gets the hex encoded 128-bit MD5 hash of this object's contents as
+	     * computed by KS3.
+	     */
         public String getETag()
         {
             return this.eTag;
         }
 
+	    /**
+	     * Sets the hex encoded 128-bit MD5 hash of this object's contents as
+	     * computed by KS3.
+	     */
         public void setETag(String eTag)
         {
             this.eTag = eTag;
         }
 
+	    /**
+	     * Gets the size of this object in bytes.
+	     */
         public long? getSize()
         {
             return this.size;
         }
 
+	    /**
+	     * Sets the size of this object in bytes.
+	     */
         public void setSize(long? size)
         {
             this.size = size;
         }
 
+	    /**
+	     * Gets the date when, according to KS3, this object was last
+	     * modified.
+	     */
         public DateTime getLastModified()
         {
             return this.lastModified;
         }
 
+	    /**
+	     * Sets the date, according to KS3, this object was last modified.
+	     */
         public void setLastModified(DateTime lastModified)
         {
             this.lastModified = lastModified;
         }
 
+	    /**
+	     * Gets the owner of this object.
+         */
         public Owner getOwner()
         {
             return this.owner;
         }
 
+	    /**
+	     * Sets the owner of this object.
+	     */
         public void setOwner(Owner owner)
         {
             this.owner = owner;
@@ -98,7 +135,7 @@ namespace KS3.Model
         public override String ToString()
         {
             StringBuilder builder = new StringBuilder();
-            builder.Append("KS3ObjectSummary [bucketName=" + this.bucketName + ", owner=" + this.owner);
+            builder.Append("ObjectSummary [bucketName=" + this.bucketName + ", owner=" + this.owner);
             if (this.key != null) builder.Append(", key=" + this.key);
             if (this.eTag != null) builder.Append(", eTag=" + this.eTag);
             if (this.size != null) builder.Append(", size=" + this.size);

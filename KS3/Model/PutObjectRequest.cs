@@ -6,6 +6,9 @@ using System.IO;
 
 namespace KS3.Model
 {
+    /**
+     * Uploads a new object to the specified KS3 bucket.
+     */
     public class PutObjectRequest : KS3Request
     {
         /**
@@ -42,6 +45,17 @@ namespace KS3.Model
          */
         private ObjectMetadata metadata;
 
+        /**
+         * An optional pre-configured access control policy to use for the new
+         * object. Ignored in favor of accessControlList, if present.
+         */
+        private CannedAccessControlList cannedAcl;
+
+        /**
+         * An optional access control list to apply to the new object. If specified,
+         * cannedAcl will be ignored.
+         */
+        private AccessControlList acl;
 
         /**
          * The optional progress listener for receiving updates about object upload
@@ -49,13 +63,11 @@ namespace KS3.Model
          */
         private ProgressListener progressListener;
 
-
-        /**
-         * Constructs a new
-         * {@link PutObjectRequest} object to upload a file to the
-         * specified bucket and key. After constructing the request,
-         * users may optionally specify object metadata or a canned ACL as well.
-         */
+	    /**
+	     * Constructs a new PutObjectRequest object to upload a file to the
+	     * specified bucket and key. After constructing the request, users may
+	     * optionally specify object metadata or a canned ACL as well.
+	     */
         public PutObjectRequest(String bucketName, String key, FileInfo file)
         {
             this.bucketName = bucketName;
@@ -63,20 +75,11 @@ namespace KS3.Model
             this.file = file;
         }
 
-        /**
-         * Constructs a new
-         * {@link PutObjectRequest} object to upload a stream of data to
-         * the specified bucket and key. After constructing the request,
-         * users may optionally specify object metadata or a canned ACL as well.
-         * <p>
-         * Content length for the data stream <b>must</b> be
-         * specified in the object metadata parameter; Amazon S3 requires it
-         * be passed in before the data is uploaded. Failure to specify a content
-         * length will cause the entire contents of the input stream to be buffered
-         * locally in memory so that the content length can be calculated, which can
-         * result in negative performance problems.
-         * </p>
-         */
+	    /**
+	     * Constructs a new PutObjectRequest object to upload a stream of
+	     * data to the specified bucket and key. After constructing the request,
+	     * users may optionally specify object metadata or a canned ACL as well.
+	     */
         public PutObjectRequest(String bucketName, String key, Stream input, ObjectMetadata metadata)
         {
             this.bucketName = bucketName;
@@ -119,56 +122,52 @@ namespace KS3.Model
             this.key = key;
         }
 
-        /**
-         * Gets the path and name of the file
-         * containing the data to be uploaded to KS3.
-         * Either specify a file or an input stream containing the data to be
-         * uploaded to KS3; both cannot be specified.
-         */
+	    /**
+	     * Gets the path and name of the file containing the data to be uploaded to
+	     * KS3. Either specify a file or an input stream containing the data to be
+	     * uploaded to KS3; both cannot be specified.
+	     */
         public FileInfo getFile()
         {
             return this.file;
         }
 
-        /**
-         * Sets the path and name of the file
-         * containing the data to be uploaded to KS3.
-         * Either specify a file or an input stream containing the data to be
-         * uploaded to KS3; both cannot be specified.
-         */
+	    /**
+	     * Sets the path and name of the file containing the data to be uploaded to
+	     * KS3. Either specify a file or an input stream containing the data to be
+	     * uploaded to KS3; both cannot be specified.
+	     */
         public void setFile(FileInfo file)
         {
             this.file = file;
         }
 
-        /**
-         * Gets the optional metadata instructing KS3 how to handle the
-         * uploaded data (e.g. custom user metadata, hooks for specifying content
-         * type, etc.).
-         * <p>
-         * If uploading from an input stream,
-         * <b>always</b> specify metadata with the content size set. Otherwise the
-         * contents of the input stream have to be buffered in memory before
-         * being sent to KS3. This can cause very negative performance
-         * impacts.
-         * </p>
-         */
+	    /**
+	     * Gets the optional metadata instructing KS3 how to handle the uploaded
+	     * data (e.g. custom user metadata, hooks for specifying content type,
+	     * etc.).
+	     * <p>
+	     * If uploading from an input stream, <b>always</b> specify metadata with
+	     * the content size set. Otherwise the contents of the input stream have to
+	     * be buffered in memory before being sent to KS3. This can cause very
+	     * negative performance impacts.
+	     * </p>
+	     */
         public ObjectMetadata getMetadata()
         {
             return this.metadata;
         }
 
-        /**
-         * Sets the optional metadata instructing KS3 how to handle the
-         * uploaded data (e.g. custom user metadata, hooks for specifying content
-         * type, etc.).
-         * <p>
-         * If uploading from an input stream,
-         * <b>always</b> specify metadata with the content size set. Otherwise the
-         * contents of the input stream have to be buffered in memory before
-         * being sent to KS3. This can cause very negative performance
-         * impacts.
-         * </p>
+	    /**
+	     * Sets the optional metadata instructing KS3 how to handle the uploaded
+	     * data (e.g. custom user metadata, hooks for specifying content type,
+	     * etc.).
+	     * <p>
+	     * If uploading from an input stream, <b>always</b> specify metadata with
+	     * the content size set. Otherwise the contents of the input stream have to
+	     * be buffered in memory before being sent to KS3. This can cause very
+	     * negative performance impacts.
+	     * </p>
          */
         public void setMetadata(ObjectMetadata metadata)
         {
@@ -176,21 +175,59 @@ namespace KS3.Model
         }
 
         /**
-         * Gets the input stream containing the data to be uploaded to KS3.
-         * The user of this request
-         * must either specify a file or an input stream containing the data to be
-         * uploaded to KS3; both cannot be specified.
+         * Gets the optional pre-configured access control policy to use for the new
+         * object.
          */
+        public CannedAccessControlList getCannedAcl()
+        {
+            return cannedAcl;
+        }
+
+        /**
+         * Sets the optional pre-configured access control policy to use for the new
+         * object.
+         */
+        public void setCannedAcl(CannedAccessControlList cannedAcl)
+        {
+            this.cannedAcl = cannedAcl;
+        }
+
+        /**
+         * Returns the optional access control list for the new object. If
+         * specified, cannedAcl will be ignored.
+         * 
+         * @param accessControlList
+         *            The access control list for the new object.
+         */
+        public AccessControlList getAcl()
+        {
+            return this.acl;
+        }
+
+        /**
+         * Sets the optional access control list for the new object. If specified,
+         * cannedAcl will be ignored.
+         */
+        public void setAcl(AccessControlList acl)
+        {
+            this.acl = acl;
+        }
+
+	    /**
+	     * Gets the input stream containing the data to be uploaded to KS3. The user
+	     * of this request must either specify a file or an input stream containing
+	     * the data to be uploaded to KS3; both cannot be specified.
+	     */
         public Stream getInputStream()
         {
             return this.inputStream;
         }
 
-        /**
-         * Sets the input stream containing the data to be uploaded to KS3.
-         * Either specify a file or an input stream containing the data to be
-         * uploaded to KS3; both cannot be specified.
-         */
+	    /**
+	     * Sets the input stream containing the data to be uploaded to KS3. Either
+	     * specify a file or an input stream containing the data to be uploaded to
+	     * KS3; both cannot be specified.
+	     */
         public void setInputStream(Stream inputStream)
         {
             this.inputStream = inputStream;
