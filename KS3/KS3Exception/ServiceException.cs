@@ -31,21 +31,34 @@ namespace KS3.KS3Exception
          */
         public ServiceException(String message, Exception cause) : base(message, cause) { }
 
+        /**
+         * Sets the KS3 requestId for this exception.
+         */
         public void setRequestId(String requestId)
         {
             this.requestId = requestId;
         }
 
+        /**
+         * Returns the KS3 request ID that uniquely identifies the service request
+         * the caller made.
+         */
         public String getRequestId()
         {
             return this.requestId;
         }
 
+        /**
+         * Sets the KS3 error code represented by this exception.
+         */
         public void setErrorCode(String errorCode)
         {
             this.errorCode = errorCode;
         }
 
+        /**
+         * Sets the KS3 error code represented by this exception.
+         */
         public String getErrorCode()
         {
             return this.errorCode;
@@ -68,13 +81,17 @@ namespace KS3.KS3Exception
             return statusCode;
         }
 
+        /**
+         * Returns a string summary of the details of this exception including the
+         * HTTP status code, KS3 request ID, KS3 error code and error message.
+         */
         public override string ToString()
         {
             return String.Join("\n", new List<String> {
                    "ServiceException:",
-                   "Status Code: " + this.getStatusCode(),
-                   "Request ID: " + this.getRequestId(),
-                   "Error Code: " + this.getErrorCode(),
+                   "Status Code: " + this.statusCode,
+                   "Request ID: " + this.requestId,
+                   "Error Code: " + this.errorCode,
                    "Error Message: " + this.Message});
         }
     }

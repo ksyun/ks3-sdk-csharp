@@ -5,6 +5,9 @@ using System.Text;
 
 namespace KS3.Model
 {
+    /**
+     * Contains the data returned by KS3 from the <code>putObject</code> operation.
+     */
     public class PutObjectResult : KS3Request
     {
         /** The ETag value of the new object */
@@ -38,6 +41,9 @@ namespace KS3.Model
             this.contentMD5 = contentMD5;
         }
 
+        /**
+	     * Returns the content MD5.
+	     */
         public String getContentMD5()
         {
             return this.contentMD5;

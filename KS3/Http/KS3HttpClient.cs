@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
+using System.Net.Security;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 using KS3.Auth;
 using KS3.Model;
@@ -18,8 +20,6 @@ namespace KS3.Http
         /** Client configuration options, such as proxy settings, max retries, etc. */
         private ClientConfiguration config;
 
-        private HttpRequestFactory httpRequestFactory = new HttpRequestFactory();
-
         private ErrorResponseHandler errorResponseHandler = new ErrorResponseHandler(new ErrorResponseUnmarshaller());
 
         public KS3HttpClient(ClientConfiguration clientConfiguration)
@@ -30,6 +30,9 @@ namespace KS3.Http
 
         private void init()
         {
+            /* Setting for https proctol */
+            ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(CheckValidationResult);
+
             /* Set max connections */
             int maxConnections = config.getMaxConnections();
             ServicePointManager.DefaultConnectionLimit = maxConnections;
@@ -55,103 +58,58 @@ namespace KS3.Http
                 WebRequest.DefaultWebProxy = null;
         }
 
+        private static bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
+        {
+            return true; // always accept
+        }
+
         public X excute<X, Y>(Request<Y> request, HttpResponseHandler<X> responseHandler, KS3Signer<Y> ks3Signer) where Y : KS3Request
         {
             this.setUserAgent(request);
 
-            int retryCount = 0;
-            Uri redirectedURI = null;
+            HttpWebRequest httpRequest = null;
+            HttpWebResponse httpResponse = null;
 
-            // Make a copy of the original request params and headers so that we can
-            // permute it in this loop and start over with the original every time.
-            Dictionary<String, String> originalParameters = new Dictionary<String, String>(request.getParameters());
-            Dictionary<String, String> originalHeaders = new Dictionary<String, String>(request.getHeaders());
-
-            for (; ; )
+            try
             {
-                if (retryCount > 0)
-                {
-                    request.setParameters(originalParameters);
-                    request.setHeaders(originalHeaders);
-                    if (request.getContent() != null) request.getContent().Seek(0, SeekOrigin.Begin);
-                }
+                // Sign the request if a signer was provided
+                if (ks3Signer != null && request.getOriginalRequest().getRequestCredentials() != null)
+                    ks3Signer.sign(request, request.getOriginalRequest().getRequestCredentials());
 
-                HttpWebRequest httpRequest = null;
-                HttpWebResponse httpResponse = null;
+                httpRequest = HttpRequestFactory.createHttpRequest(request, this.config);
+                httpResponse = (HttpWebResponse)httpRequest.GetResponse();
 
+                return responseHandler.handle(httpResponse);
+            }
+            catch (WebException we)
+            {
+                HttpWebResponse errorResponse = (HttpWebResponse)we.Response;
+                ServiceException serviceException = null;
                 try
                 {
-                    // Sign the request if a signer was provided
-                    if (ks3Signer != null && request.getOriginalRequest().getRequestCredentials() != null)
-                        ks3Signer.sign(request, request.getOriginalRequest().getRequestCredentials());
-
-                    httpRequest = httpRequestFactory.createHttpRequest(request, this.config, redirectedURI);
-                    httpResponse = (HttpWebResponse)httpRequest.GetResponse();
-
-                    if (isRequestSuccessful(httpResponse))
-                        return responseHandler.handle(httpResponse);
-                    else if (isTemporaryRedirect(httpResponse))
-                        redirectedURI = new Uri(httpResponse.Headers["location"]);
+                    serviceException = errorResponseHandler.handle(errorResponse);
                 }
-                catch (WebException we)
+                catch
                 {
-                    HttpWebResponse errorResponse = (HttpWebResponse)we.Response;
-                    ServiceException serviceException = null;
-                    try
-                    {
-                        serviceException = errorResponseHandler.handle(errorResponse);
-                    }
-                    catch
-                    {
-                        throw we;
-                    }
-                    if (!shouldRetry(retryCount, serviceException)) throw serviceException;
+                    throw we;
                 }
-                finally
-                {
-                    if(httpResponse != null) httpResponse.Close();
-                    ++retryCount;
-                }
+                throw serviceException;
             }
-            throw new Exception("Unable to execute HTTP request.");
+            finally
+            {
+                if(httpResponse != null)
+                    httpResponse.Close();
+            }
         }
 
         /**
          * Sets a User-Agent for the specified request, taking into account
          * any custom data.
-         */
+         */   
         private void setUserAgent<T>(Request<T> request) where T : KS3Request
         {
             String userAgent = config.getUserAgent();
-            if (userAgent != null) request.addHeader(Headers.USER_AGENT, userAgent);
-        }
-
-        private Boolean isRequestSuccessful(HttpWebResponse response)
-        {
-            return (int)response.StatusCode / 100 == (int)HttpStatusCode.OK / 100;
-        }
-
-        private Boolean isTemporaryRedirect(HttpWebResponse response)
-        {
-            return response.StatusCode == HttpStatusCode.TemporaryRedirect &&
-                                          response.Headers.AllKeys.Contains("location") &&
-                                          response.Headers["location"].Length > 0;
-        }
-
-        private Boolean shouldRetry(int retryCount, ServiceException serviceException)
-        {
-            if (retryCount >= this.config.getMaxErrorRetry()) return false;
-
-            if (serviceException.getStatusCode() == (int)HttpStatusCode.InternalServerError
-                || serviceException.getStatusCode() == (int)HttpStatusCode.ServiceUnavailable)
-                return true;
-
-            if ("RequestTimeTooSkewed".Equals(serviceException.getErrorCode())
-                || "InvalidSignatureException".Equals(serviceException.getErrorCode())
-                || "SignatureDoesNotMatch".Equals(serviceException.getErrorCode()))
-                return true;
-
-            return false;
+            if (userAgent != null) request.setHeader(Headers.USER_AGENT, userAgent);
         }
     }
 }

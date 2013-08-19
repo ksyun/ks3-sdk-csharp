@@ -14,10 +14,10 @@ namespace KS3.Model
         private String resourcePath;
 
         /** Map of the parameters being sent as part of this request */
-        private Dictionary<String, String> parameters = new Dictionary<String, String>();
+        private IDictionary<String, String> parameters = new Dictionary<String, String>();
 
         /** Map of the headers included in this request */
-        private Dictionary<String, String> headers = new Dictionary<String, String>();
+        private IDictionary<String, String> headers = new Dictionary<String, String>();
 
         /** The service endpoint to which this request should be sent */
         private Uri endpoint;
@@ -29,7 +29,7 @@ namespace KS3.Model
         private KS3Request originalRequest;
 
         /** The HTTP method to use when sending this request. */
-        private HttpMethodName httpMethod = HttpMethodName.POST;
+        private HttpMethod httpMethod;
 
         /** An optional stream from which to read the request payload. */
         private Stream content;
@@ -53,12 +53,12 @@ namespace KS3.Model
             return this.originalRequest;
         }
 
-        public void addHeader(String name, String value)
+        public void setHeader(String name, String value)
         {
             this.headers[name] = value;
         }
 
-        public Dictionary<String, String> getHeaders()
+        public IDictionary<String, String> getHeaders()
         {
             return this.headers;
         }
@@ -73,22 +73,22 @@ namespace KS3.Model
             return this.resourcePath;
         }
 
-        public void addParameter(String name, String value)
+        public void setParameter(String name, String value)
         {
             this.parameters[name] = value;
         }
 
-        public Dictionary<String, String> getParameters()
+        public IDictionary<String, String> getParameters()
         {
             return this.parameters;
         }
 
-        public HttpMethodName getHttpMethod()
+        public HttpMethod getHttpMethod()
         {
             return this.httpMethod;
         }
 
-        public void setHttpMethod(HttpMethodName httpMethod)
+        public void setHttpMethod(HttpMethod httpMethod)
         {
             this.httpMethod = httpMethod;
         }
@@ -105,7 +105,7 @@ namespace KS3.Model
 
         public Stream getContent()
         {
-            return content;
+            return this.content;
         }
 
         public void setContent(Stream content)

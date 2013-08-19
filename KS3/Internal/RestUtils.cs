@@ -10,7 +10,7 @@ namespace KS3.Internal
 {
     public static class RestUtils
     {
-        private static List<String> SIGNED_PARAMETERS = new List<String> {
+        private static IList<String> SIGNED_PARAMETERS = new List<String> {
             "acl", "torrent", "logging", "location", "policy", "requestPayment", "versioning",
             "versions", "versionId", "notification", "uploadId", "uploads", "partNumber", "website",
             "delete", "lifecycle", "tagging", "cors", "restore",
@@ -19,7 +19,7 @@ namespace KS3.Internal
 
 
         /**
-         * Calculate the canonical string for a REST/HTTP request to S3.
+         * Calculate the canonical string for a REST/HTTP request to KS3.
          */
         public static String makeKS3CanonicalString<T>(String method, String resource, Request<T> request, String expires) where T : KS3Request
         {
@@ -27,15 +27,14 @@ namespace KS3.Internal
             buf.Append(method + "\n");
 
             // Add all interesting headers to a list, then sort them.  "Interesting"
-            // is defined as Content-MD5, Content-Type, Date, and x-amz-
-            Dictionary<String, String> headers = request.getHeaders();
-            SortedDictionary<String, String> interestingHeaders = new SortedDictionary<String, String>();
+            // is defined as Content-MD5, Content-Type, Date, and x-kss-
+            IDictionary<String, String> headers = request.getHeaders();
+            IDictionary<String, String> interestingHeaders = new SortedDictionary<String, String>();
             if (headers != null && headers.Count > 0)
             {
                 foreach (String name in headers.Keys)
                 {
                     String value = headers[name];
-                    if (name == null) continue;
 
                     String lname = name.ToLower();
                     
@@ -46,40 +45,32 @@ namespace KS3.Internal
                 }
             }
 
-            // Remove default date timestamp if "x-amz-date" is set.
+            // Remove default date timestamp if "x-kss-date" is set.
             if (interestingHeaders.ContainsKey(Headers.KS3_ALTERNATE_DATE))
-            {
-                if (interestingHeaders.ContainsKey("date")) interestingHeaders["date"] = "";
-                else interestingHeaders.Add("date", "");
-            }
+                interestingHeaders[Headers.DATE.ToLower()] = "";
 
             // Use the expires value as the timestamp if it is available. This trumps both the default
-            // "date" timestamp, and the "x-amz-date" header.
+            // "date" timestamp, and the "x-kss-date" header.
             if (expires != null)
-            {
-                if (interestingHeaders.ContainsKey("date")) interestingHeaders["date"] = expires;
-                else interestingHeaders.Add("date", expires);
-            }
+                interestingHeaders[Headers.DATE.ToLower()] = expires;
 
             // These headers require that we still put a new line in after them,
             // even if they don't exist.
-            if (!interestingHeaders.ContainsKey("content-type"))
-                interestingHeaders.Add("content-type", "");
-            if (!interestingHeaders.ContainsKey("content-md5"))
-                interestingHeaders.Add("content-md5", "");
+            if (!interestingHeaders.ContainsKey(Headers.CONTENT_TYPE.ToLower()))
+                interestingHeaders.Add(Headers.CONTENT_TYPE.ToLower(), "");
+            if (!interestingHeaders.ContainsKey(Headers.CONTENT_MD5.ToLower()))
+                interestingHeaders.Add(Headers.CONTENT_MD5.ToLower(), "");
 
-            // Any parameters that are prefixed with "x-amz-" need to be included
+            // Any parameters that are prefixed with "x-kss-" need to be included
             // in the headers section of the canonical string to sign
             foreach (String name in request.getParameters().Keys)
                 if (name.StartsWith(Headers.KS3_PREFIX))
                 {
                     String value = request.getParameters()[name];
-                    if (interestingHeaders.ContainsKey(name))
-                        interestingHeaders[name] = value;
-                    else interestingHeaders.Add(name, value);
+                    interestingHeaders[name] = value;
                 }
 
-            // Add all the interesting headers (i.e.: all that startwith x-amz- ;-))
+            // Add all the interesting headers (i.e.: all that startwith x-kss- ;-))
             foreach (String name in interestingHeaders.Keys)
             {
                 if (name.StartsWith(Headers.KS3_PREFIX))
@@ -111,14 +102,14 @@ namespace KS3.Internal
 
         public static void populateObjectMetadata(HttpWebResponse response, ObjectMetadata metadata)
         {
-            HashSet<String> ignoredHeaders = new HashSet<String>{ Headers.DATE, Headers.SERVER, Headers.REQUEST_ID };
+            ISet<String> ignoredHeaders = new HashSet<String>{ Headers.DATE, Headers.SERVER, Headers.REQUEST_ID, Headers.CONNECTION };
             foreach (String name in response.Headers.AllKeys)
             {
                 if (name.StartsWith(Headers.KS3_USER_METADATA_PREFIX))
                 {
                     String value = response.Headers[name];
                     String key = name.Substring(Headers.KS3_USER_METADATA_PREFIX.Length);
-                    metadata.addUserMetaData(key, value);
+                    metadata.setUserMetaData(key, value);
                 }
                 else if (ignoredHeaders.Contains(name))
                 {

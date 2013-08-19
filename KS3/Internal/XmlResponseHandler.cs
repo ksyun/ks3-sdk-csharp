@@ -16,7 +16,7 @@ namespace KS3.Internal
         private Unmarshaller<X, Stream> responseUnmarshaller;
 
         /** Response headers from the processed response */
-        private Dictionary<String, String> responseHeaders;
+        private IDictionary<String, String> responseHeaders;
 
 
         /**
@@ -35,7 +35,9 @@ namespace KS3.Internal
 
             foreach (String key in response.Headers.AllKeys)
                 responseHeaders.Add(key, response.Headers[key]);
-            if (responseUnmarshaller != null) result = responseUnmarshaller.unmarshall(response.GetResponseStream());
+
+            if (responseUnmarshaller != null)
+                result = responseUnmarshaller.unmarshall(response.GetResponseStream());
             
             return result;
         }
@@ -44,14 +46,9 @@ namespace KS3.Internal
          * Returns the headers from the processed response. Will return null until a
          * response has been handled.
          */
-        public Dictionary<String, String> getResponseHeaders()
+        public IDictionary<String, String> getResponseHeaders()
         {
             return this.responseHeaders;
-        }
-
-        public Boolean needsConnectionLeftOpen()
-        {
-            return false;
         }
     }
 }

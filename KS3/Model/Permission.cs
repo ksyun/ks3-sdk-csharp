@@ -43,13 +43,28 @@ namespace KS3.Model
          */
         public static String WRITE_ACP = "WRITE_ACP";
 
-
         /** A dictionary to find the headers for the perssions. */
-        private static Dictionary<String, String> headers = new Dictionary<String, String>(){
+        private static IDictionary<String, String> headers = new Dictionary<String, String>(){
             {FULL_CONTROL, Headers.PERMISSION_FULL_CONTROL},
             {READ, Headers.PERMISSION_READ},
             {WRITE, Headers.PERMISSION_WRITE},
             {READ_ACP, Headers.PERMISSION_READ_ACP},
             {WRITE_ACP, Headers.PERMISSION_WRITE_ACP}};
+
+        /**
+         * Returns the name of the header used to grant this permission.
+         */
+        public static String getHeaderName(String permissionString)
+        {
+            return headers[permissionString];
+        }
+
+        /**
+         * Returns a list of the permissions.
+         */
+        public static IList<String> listPermissions()
+        {
+            return new List<String> { FULL_CONTROL, READ, WRITE, READ_ACP, WRITE_ACP };
+        }
     }
 }

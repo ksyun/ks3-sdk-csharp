@@ -14,6 +14,7 @@ namespace KS3.Internal
     public class ObjectResponseHandler : HttpResponseHandler<KS3Object> 
     {
         GetObjectRequest getObjectRequest;
+
         public ObjectResponseHandler(GetObjectRequest getObjectRequest)
         {
             this.getObjectRequest = getObjectRequest;
@@ -23,10 +24,10 @@ namespace KS3.Internal
         {
             KS3Object ks3Object = new KS3Object();
 
-            FileInfo destinationFile = getObjectRequest.getDestinationFile();
+            FileInfo destinationFile = this.getObjectRequest.getDestinationFile();
             byte[] content = null;
             
-            ProgressListener progressListener = getObjectRequest.getProgressListener();
+            ProgressListener progressListener = this.getObjectRequest.getProgressListener();
 
             ObjectMetadata metadata = new ObjectMetadata();
             RestUtils.populateObjectMetadata(response, metadata);
@@ -43,10 +44,9 @@ namespace KS3.Internal
 
                 int SIZE = Constants.DEFAULT_STREAM_BUFFER_SIZE;
                 byte[] buf = new byte[SIZE];
-                
 
                 if (destinationFile != null)
-                    output = getObjectRequest.getDestinationFile().OpenWrite();
+                    output = new FileStream(this.getObjectRequest.getDestinationFile().FullName, FileMode.Create);
                 else
                 {
                     content = new byte[metadata.getContentLength()];
@@ -75,11 +75,6 @@ namespace KS3.Internal
                 ks3Object.setObjectContent(new MemoryStream(content));
 
             return ks3Object;
-        }
-
-        public Boolean needsConnectionLeftOpen()
-        {
-            return false;
         }
     }
 }

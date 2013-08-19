@@ -8,17 +8,25 @@ using KS3.Model;
 
 namespace KS3
 {
+    /**
+     * Provides an interface for accessing the KS3.
+     */
     public interface KS3
     {
         /**
-         * Returns a list of all KS3 buckets that the authenticated sender of the request owns. 
+         * Overrides the default endpoint for this client.
          */
-        List<Bucket> listBuckets();
+        void setEndpoint(String endpoint);
 
         /**
          * Returns a list of all KS3 buckets that the authenticated sender of the request owns. 
          */
-        List<Bucket> listBuckets(ListBucketsRequest listBucketRequest);
+        IList<Bucket> listBuckets();
+
+        /**
+         * Returns a list of all KS3 buckets that the authenticated sender of the request owns. 
+         */
+        IList<Bucket> listBuckets(ListBucketsRequest listBucketRequest);
 
         /**
          * Deletes the specified bucket. 
@@ -105,12 +113,12 @@ namespace KS3
          */
         KS3Object getObject(GetObjectRequest getObjectRequest);
 
-        /*
+        /**
          * Gets the metadata for the specified KS3 object without actually fetching the object itself.
          */
         ObjectMetadata getObjectMetadata(String bucketName, String key);
 
-        /*
+        /**
          * Gets the metadata for the specified KS3 object without actually fetching the object itself.
          */
         ObjectMetadata getObjectMetadata(GetObjectMetadataRequest getObjectMetadataRequest);

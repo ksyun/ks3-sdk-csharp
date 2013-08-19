@@ -5,6 +5,9 @@ using System.Text;
 
 namespace KS3.Model
 {
+    /**
+     * Notification of a progress change on an KS3 transfer. 
+     */
     public class ProgressEvent
     {
         public static int CONTINUE = 0;

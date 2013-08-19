@@ -28,10 +28,5 @@ namespace KS3.Internal
             serviceException.setStatusCode((int)errorResponse.StatusCode);
             return serviceException;
         }
-
-        public Boolean needsConnectionLeftOpen()
-        {
-            return false;
-        }
     }
 }

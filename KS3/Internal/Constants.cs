@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace KS3.Internal
 {
-    public class Constants
+    public static class Constants
     {
         /** Default hostname for the KS3 service endpoint */
         public static String KS3_HOSTNAME = "kss.ksyun.com";

@@ -70,7 +70,8 @@ namespace KS3
 
         public void setEndpoint(String endpoint)
         {
-            if (!endpoint.Contains("://")) endpoint = clientConfiguration.getProtocol() + "://" + endpoint;
+            if (!endpoint.Contains("://"))
+                endpoint = clientConfiguration.getProtocol() + "://" + endpoint;
             this.endpoint = new Uri(endpoint);
         }
 
@@ -105,7 +106,7 @@ namespace KS3
         /**
          * Returns a list of all KS3 buckets that the authenticated sender of the request owns. 
          */
-        public List<Bucket> listBuckets()
+        public IList<Bucket> listBuckets()
         {
             return this.listBuckets(new ListBucketsRequest());
         }
@@ -113,9 +114,9 @@ namespace KS3
         /**
          * Returns a list of all KS3 buckets that the authenticated sender of the request owns. 
          */
-        public List<Bucket> listBuckets(ListBucketsRequest listBucketRequest)
+        public IList<Bucket> listBuckets(ListBucketsRequest listBucketsRequest)
         {
-            Request<ListBucketsRequest> request = this.createRequest(null, null, listBucketRequest, HttpMethodName.GET);
+            Request<ListBucketsRequest> request = this.createRequest(null, null, listBucketsRequest, HttpMethod.GET);
             return this.invoke(request, new ListBucketsUnmarshaller(), null, null);
         }
 
@@ -134,7 +135,7 @@ namespace KS3
         {
             String bucketName = deleteBucketRequest.getBucketName();
 
-            Request<DeleteBucketRequest> request = this.createRequest(bucketName, null, deleteBucketRequest, HttpMethodName.DELETE);
+            Request<DeleteBucketRequest> request = this.createRequest(bucketName, null, deleteBucketRequest, HttpMethod.DELETE);
             this.invoke(request, voidResponseHandler, bucketName, null);
         }
 
@@ -143,7 +144,7 @@ namespace KS3
          */
         public AccessControlList getBucketAcl(String bucketName)
         {
-            return getBucketAcl(new GetBucketAclRequest(bucketName));
+            return this.getBucketAcl(new GetBucketAclRequest(bucketName));
         }
 
         /**
@@ -153,10 +154,10 @@ namespace KS3
         {
             String bucketName = getBucketAclRequest.getBucketName();
 
-            Request<GetBucketAclRequest> request = createRequest(bucketName, null, getBucketAclRequest, HttpMethodName.GET);
-            request.addParameter("acl", null);
+            Request<GetBucketAclRequest> request = createRequest(bucketName, null, getBucketAclRequest, HttpMethod.GET);
+            request.setParameter("acl", null);
 
-            return invoke(request, new AccessControlListUnmarshaller(), bucketName, null);
+            return this.invoke(request, new AccessControlListUnmarshaller(), bucketName, null);
         }
 
         /**
@@ -164,7 +165,7 @@ namespace KS3
          */
         public Bucket createBucket(String bucketName)
         {
-            return createBucket(new CreateBucketRequest(bucketName));
+            return this.createBucket(new CreateBucketRequest(bucketName));
         }
 
         /**
@@ -174,11 +175,13 @@ namespace KS3
         {
             String bucketName = createBucketRequest.getBucketName();
 
-            Request<CreateBucketRequest> request = this.createRequest(bucketName, null, createBucketRequest, HttpMethodName.PUT);
+            Request<CreateBucketRequest> request = this.createRequest(bucketName, null, createBucketRequest, HttpMethod.PUT);
             request.getHeaders()[Headers.CONTENT_LENGTH] = "0";
             
-            if (createBucketRequest.getCannedAcl() != null)
-                request.addHeader(Headers.KS3_CANNED_ACL, createBucketRequest.getCannedAcl().getCannedAclHeader());
+            if (createBucketRequest.getAcl() != null)
+                addAclHeaders(request, createBucketRequest.getAcl());
+            else if (createBucketRequest.getCannedAcl() != null)
+                request.setHeader(Headers.KS3_CANNED_ACL, createBucketRequest.getCannedAcl().getCannedAclHeader());
 
             this.invoke(request, voidResponseHandler, bucketName, null);
 
@@ -210,22 +213,23 @@ namespace KS3
             AccessControlList acl = setBucketAclRequest.getAcl();
             CannedAccessControlList cannedAcl = setBucketAclRequest.getCannedAcl();
 
-            Request<SetBucketAclRequest> request = this.createRequest(bucketName, null, setBucketAclRequest, HttpMethodName.PUT);
+            Request<SetBucketAclRequest> request = this.createRequest(bucketName, null, setBucketAclRequest, HttpMethod.PUT);
             
             if (acl != null)
             {
-                String xml = new AclXmlFactory().convertToXmlString(acl);
+                String xml = AclXmlFactory.convertToXmlString(acl);
                 MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
                 
                 request.setContent(memoryStream);
-                request.addHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
+                request.setHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
             }
             else if (cannedAcl != null)
             {
-                request.addHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
-                request.addHeader(Headers.CONTENT_LENGTH, "0");
+                request.setHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
+                request.setHeader(Headers.CONTENT_LENGTH, "0");
             }
-            request.addParameter("acl", null);
+
+            request.setParameter("acl", null);
 
             this.invoke(request, this.voidResponseHandler, bucketName, null);
         }
@@ -252,12 +256,16 @@ namespace KS3
         public ObjectListing listObjects(ListObjectsRequest listObjectRequest)
         {
             String bucketName = listObjectRequest.getBucketName();
-            Request<ListObjectsRequest> request = this.createRequest(bucketName, null, listObjectRequest, HttpMethodName.GET);
+            Request<ListObjectsRequest> request = this.createRequest(bucketName, null, listObjectRequest, HttpMethod.GET);
 
-            if (listObjectRequest.getPrefix() != null) request.addParameter("prefix", listObjectRequest.getPrefix());
-            if (listObjectRequest.getMarker() != null) request.addParameter("marker", listObjectRequest.getMarker());
-            if (listObjectRequest.getDelimiter() != null) request.addParameter("delimiter", listObjectRequest.getDelimiter());
-            if (listObjectRequest.getMaxKeys() != null) request.addParameter("max-keys", listObjectRequest.getMaxKeys().ToString());
+            if (listObjectRequest.getPrefix() != null)
+                request.setParameter("prefix", listObjectRequest.getPrefix());
+            if (listObjectRequest.getMarker() != null)
+                request.setParameter("marker", listObjectRequest.getMarker());
+            if (listObjectRequest.getDelimiter() != null)
+                request.setParameter("delimiter", listObjectRequest.getDelimiter());
+            if (listObjectRequest.getMaxKeys() != null && listObjectRequest.getMaxKeys() >= 0)
+                request.setParameter("max-keys", listObjectRequest.getMaxKeys().ToString());
 
             return this.invoke(request, new ListObjectsUnmarshallers(), bucketName, null);
         }
@@ -277,7 +285,7 @@ namespace KS3
         { 
             String bucketName = deleteObjectRequest.getBucketName();
             String key = deleteObjectRequest.getKey();
-            Request<DeleteObjectRequest> request = this.createRequest(bucketName, key, deleteObjectRequest, HttpMethodName.DELETE);
+            Request<DeleteObjectRequest> request = this.createRequest(bucketName, key, deleteObjectRequest, HttpMethod.DELETE);
 
             this.invoke(request, voidResponseHandler, bucketName, key);
         }
@@ -306,12 +314,12 @@ namespace KS3
             String bucketName = getObjectRequest.getBucketName();
             String key = getObjectRequest.getKey();
 
-            Request<GetObjectRequest> request = this.createRequest(bucketName, key, getObjectRequest, HttpMethodName.GET);
+            Request<GetObjectRequest> request = this.createRequest(bucketName, key, getObjectRequest, HttpMethod.GET);
 
             if (getObjectRequest.getRange() != null)
             {
                 long[] range = getObjectRequest.getRange();
-                request.addHeader(Headers.RANGE, range[0].ToString() + "-" + range[1].ToString());
+                request.setHeader(Headers.RANGE, range[0].ToString() + "-" + range[1].ToString());
             }
 
             addDateHeader(request, Headers.GET_OBJECT_IF_MODIFIED_SINCE, getObjectRequest.getModifiedSinceConstraint());
@@ -328,7 +336,7 @@ namespace KS3
             {
                 ks3Object = this.invoke(request, new ObjectResponseHandler(getObjectRequest), bucketName, key);
             }
-            catch (InterruptedException e)
+            catch (ProgressInterruptedException e)
             {
                 fireProgressEvent(progressListener, ProgressEvent.CANCELED);
                 throw e;
@@ -361,7 +369,8 @@ namespace KS3
         {
             String bucketName = getObjectMetadataRequest.getBucketName();
             String key = getObjectMetadataRequest.getKey();
-            Request<GetObjectMetadataRequest> request = this.createRequest(bucketName, key, getObjectMetadataRequest, HttpMethodName.HEAD);
+
+            Request<GetObjectMetadataRequest> request = this.createRequest(bucketName, key, getObjectMetadataRequest, HttpMethod.HEAD);
 
             return invoke(request, new MetadataResponseHandler(), bucketName, key);
         }
@@ -395,46 +404,39 @@ namespace KS3
             Stream input = putObjectRequest.getInputStream();
             ProgressListener progressListener = putObjectRequest.getProgressListener();
 
-            if (metadata == null) metadata = new ObjectMetadata();
+            if (metadata == null)
+                metadata = new ObjectMetadata();
 
             // If a file is specified for upload, we need to pull some additional
             // information from it to auto-configure a few options
             if (putObjectRequest.getFile() != null)
             {
                 FileInfo file = putObjectRequest.getFile();
-                try
-                {
-                    // Always set the content length, even if it's already set
-                    metadata.setContentLength(file.Length);
-                }
-                catch (FileNotFoundException e)
-                {
-                    throw new Exception("Unable to find the file to upload: " + e.Message);
-                }
+                
+                // Always set the content length, even if it's already set
+                metadata.setContentLength(file.Length);
 
                 // Only set the content type if it hasn't already been set
                 if (metadata.getContentType() == null)
                     metadata.setContentType(Mimetypes.getMimetype(file));
 
-                using (FileStream fileStream = file.OpenRead())
+                if (metadata.getContentMD5() == null)
                 {
-                    MD5 md5 = MD5.Create();
-                    metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(fileStream)));
+                    using (FileStream fileStream = file.OpenRead())
+                    {
+                        MD5 md5 = MD5.Create();
+                        metadata.setContentMD5(Convert.ToBase64String(md5.ComputeHash(fileStream)));
+                    }
                 }
 
                 input = file.OpenRead();
             }
             else
             {
-                try
-                {
-                    metadata.setContentLength(input.Length);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception("Unable to use the stream: " + e.Message);
-                }
-                if (metadata.getContentType() == null) metadata.setContentType(Mimetypes.DEFAULT_MIMETYPE);
+                metadata.setContentLength(input.Length);
+
+                if (metadata.getContentType() == null)
+                    metadata.setContentType(Mimetypes.DEFAULT_MIMETYPE);
                 if (metadata.getContentMD5() == null)
                 {
                     using(MD5 md5 = MD5.Create())
@@ -446,7 +448,12 @@ namespace KS3
                 }
             }
             
-            Request<PutObjectRequest> request = this.createRequest(bucketName, key, putObjectRequest, HttpMethodName.PUT);
+            Request<PutObjectRequest> request = this.createRequest(bucketName, key, putObjectRequest, HttpMethod.PUT);
+
+            if (putObjectRequest.getAcl() != null)
+                addAclHeaders(request, putObjectRequest.getAcl());
+            else if (putObjectRequest.getCannedAcl() != null)
+                request.setHeader(Headers.KS3_CANNED_ACL, putObjectRequest.getCannedAcl().getCannedAclHeader());
 
             if (progressListener != null)
             {
@@ -454,7 +461,7 @@ namespace KS3
                 fireProgressEvent(progressListener, ProgressEvent.STARTED);
             }
 
-            populateRequestMetadata(request, metadata);
+            populateRequestMetadata(metadata, request);
             request.setContent(input);
 
             //-----------------------------------------------
@@ -464,7 +471,7 @@ namespace KS3
             {
                 returnedMetadata = this.invoke(request, new MetadataResponseHandler(), bucketName, key);
             }
-            catch (InterruptedException e)
+            catch (ProgressInterruptedException e)
             {
                 fireProgressEvent(progressListener, ProgressEvent.CANCELED);
                 throw e;
@@ -505,10 +512,10 @@ namespace KS3
             String bucketName = getObjectAclRequest.getBucketName();
             String key = getObjectAclRequest.getKey();
 
-            Request<GetObjectAclRequest> request = this.createRequest(bucketName, key, getObjectAclRequest, HttpMethodName.GET);
-            request.addParameter("acl", null);
+            Request<GetObjectAclRequest> request = this.createRequest(bucketName, key, getObjectAclRequest, HttpMethod.GET);
+            request.setParameter("acl", null);
 
-            return invoke(request, new AccessControlListUnmarshaller(), bucketName, key);
+            return this.invoke(request, new AccessControlListUnmarshaller(), bucketName, key);
         }
 
         /**
@@ -537,22 +544,22 @@ namespace KS3
             AccessControlList acl = setObjectAclRequest.getAcl();
             CannedAccessControlList cannedAcl = setObjectAclRequest.getCannedAcl();
 
-            Request<SetObjectAclRequest> request = this.createRequest(bucketName, key, setObjectAclRequest, HttpMethodName.PUT);
+            Request<SetObjectAclRequest> request = this.createRequest(bucketName, key, setObjectAclRequest, HttpMethod.PUT);
 
             if (acl != null)
             {
-                String xml = new AclXmlFactory().convertToXmlString(acl);
+                String xml = AclXmlFactory.convertToXmlString(acl);
                 MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
 
                 request.setContent(memoryStream);
-                request.addHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
+                request.setHeader(Headers.CONTENT_LENGTH, memoryStream.Length.ToString());
             }
             else if (cannedAcl != null)
             {
-                request.addHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
-                request.addHeader(Headers.CONTENT_LENGTH, "0");
+                request.setHeader(Headers.KS3_CANNED_ACL, cannedAcl.getCannedAclHeader());
+                request.setHeader(Headers.CONTENT_LENGTH, "0");
             }
-            request.addParameter("acl", null);
+            request.setParameter("acl", null);
 
             this.invoke(request, this.voidResponseHandler, bucketName, key);
         }
@@ -569,18 +576,17 @@ namespace KS3
          * 2. endpoint (http or https, and the host name. e.g. http://kss.ksyun.com)
          * 3. resource path (bucketName/[key], e.g. my-bucket/my-object)
          */
-        private Request<X> createRequest<X>(String bucketName, String key, X originalRequest, HttpMethodName httpMethod) where X : KS3Request 
+        private Request<X> createRequest<X>(String bucketName, String key, X originalRequest, HttpMethod httpMethod) where X : KS3Request 
         {
             Request<X> request = new DefaultRequest<X>(originalRequest);
             request.setHttpMethod(httpMethod);
             request.setEndpoint(endpoint);
 
-            if (bucketName != null)
-                bucketName = UrlEncoder.encode(bucketName, Constants.DEFAULT_ENCODING);
-            if (key != null)
-                key = UrlEncoder.encode(key, Constants.DEFAULT_ENCODING);
+            String resourcePath = "/" + (bucketName != null ? bucketName + "/" : "") + (key != null ? key : "");
+            resourcePath = UrlEncoder.encode(resourcePath, Constants.DEFAULT_ENCODING);
 
-            if (bucketName != null) request.setResourcePath(bucketName + "/" + (key != null ? key : ""));
+            request.setResourcePath(resourcePath);
+
             return request;
         }
 
@@ -605,9 +611,10 @@ namespace KS3
          */
         private X invoke<X, Y>(Request<Y> request, HttpResponseHandler<X> responseHandler, String bucket, String key) where Y : KS3Request
         {
-            Dictionary<String, String> parameters = request.getOriginalRequest().copyPrivateRequestParameters();
+            IDictionary<String, String> parameters = request.getOriginalRequest().copyPrivateRequestParameters();
             foreach (String name in parameters.Keys)
-                request.addParameter(name, parameters[name]);
+                request.setParameter(name, parameters[name]);
+
             request.setTimeOffset(timeOffset);
 
             /**
@@ -617,7 +624,7 @@ namespace KS3
              * we have to set something here otherwise the request will fail.
              */
             if (!request.getHeaders().ContainsKey(Headers.CONTENT_TYPE))
-                request.addHeader(Headers.CONTENT_TYPE, Mimetypes.DEFAULT_MIMETYPE);
+                request.setHeader(Headers.CONTENT_TYPE, Mimetypes.DEFAULT_MIMETYPE);
             
             /**
              * Set the credentials which will be used by the KS3Signer later.
@@ -630,15 +637,11 @@ namespace KS3
 
         private KS3Signer<T> createSigner<T>(Request<T> request, String bucketName, String key) where T : KS3Request
         {
-            if (bucketName != null)
-                bucketName = UrlEncoder.encode(bucketName, Constants.DEFAULT_ENCODING);
-            if (key != null)
-                key = UrlEncoder.encode(key, Constants.DEFAULT_ENCODING);
-
             String resourcePath = "/" + (bucketName != null ? bucketName + "/" : "") + (key != null ? key : "");
+            resourcePath = UrlEncoder.encode(resourcePath, Constants.DEFAULT_ENCODING);
+            
             return new KS3Signer<T>(request.getHttpMethod().ToString(), resourcePath);
         }
-
 
         /**
          * Fires a progress event with the specified event type to the specified
@@ -646,6 +649,7 @@ namespace KS3
          */
         private static void fireProgressEvent(ProgressListener listener, int eventType) {
             if (listener == null) return;
+
             ProgressEvent e = new ProgressEvent(eventType);
             listener.progressChanged(e);
         }
@@ -654,29 +658,33 @@ namespace KS3
          * Populates the specified request object with the appropriate headers from
          * the {@link ObjectMetadata} object.
          */
-
-        private static void populateRequestMetadata<X>(Request<X> request, ObjectMetadata metadata)
+        private static void populateRequestMetadata<X>(ObjectMetadata metadata, Request<X> request) where X : KS3Request
         {
-            Dictionary<String, Object> rawMetadata = metadata.getRawMetadata();
+            IDictionary<String, Object> rawMetadata = metadata.getRawMetadata();
             if (rawMetadata != null)
             {
                 foreach (String name in rawMetadata.Keys)
-                    request.addHeader(name, rawMetadata[name].ToString());
+                    request.setHeader(name, rawMetadata[name].ToString());
             }
 
-            Dictionary<String, String> userMetadata = metadata.getUserMetadata();
+            IDictionary<String, String> userMetadata = metadata.getUserMetadata();
             if (userMetadata != null)
             {
                 foreach (String name in userMetadata.Keys)
-                    request.addHeader(Headers.KS3_USER_METADATA_PREFIX + name, userMetadata[name]);
+                    request.setHeader(Headers.KS3_USER_METADATA_PREFIX + name, userMetadata[name]);
             }
         }
 
+	    /**
+	     * Adds the specified date header in RFC 822 date format to the specified
+	     * request. This method will not add a date header if the specified date
+	     * value is <code>null</code>.
+	     */
         private static void addDateHeader<X>(Request<X> request, String header, DateTime? value)
         {
-            if (value != null) request.addHeader(header, SignerUtils.getSignatrueDate(value.Value));
+            if (value != null)
+                request.setHeader(header, SignerUtils.getSignatrueDate(value.Value));
         }
-
 
         /*
          * Adds the specified string list header, joined together separated with
@@ -684,11 +692,44 @@ namespace KS3
          * This method will not add a string list header if the specified values
          * are <code>null</code> or empty.
          */
-        private static void addStringListHeader<X>(Request<X> request, String header, List<String> values)
+        private static void addStringListHeader<X>(Request<X> request, String header, IList<String> values)
         {
             if (values != null && values.Count > 0)
-                request.addHeader(header, String.Join(",", values));
+                request.setHeader(header, String.Join(", ", values));
         }
 
-    }
+        /**
+         * Sets the acccess control headers for the request given.
+         */
+        private static void addAclHeaders<X>(Request<X> request, AccessControlList acl) where X : KS3Request
+        {
+            ISet<Grant> grants = acl.getGrants();
+            IDictionary<String, IList<Grantee>> grantsByPermission = new Dictionary<String, IList<Grantee>>();
+            foreach (Grant grant in grants)
+            {
+                if (!grantsByPermission.ContainsKey(grant.getPermission()))
+                    grantsByPermission[grant.getPermission()] = new List<Grantee>();
+                grantsByPermission[grant.getPermission()].Add(grant.getGrantee());
+            }
+            foreach (String permission in Permission.listPermissions())
+            {
+                if (grantsByPermission.ContainsKey(permission))
+                {
+                    IList<Grantee> grantees = grantsByPermission[permission];
+                    bool first = true;
+                    StringBuilder granteeString = new StringBuilder();
+                    foreach (Grantee grantee in grantees)
+                    {
+                        if (first)
+                            first = false;
+                        else
+                            granteeString.Append(", ");
+                        granteeString.Append(grantee.getTypeIdentifier() + "=\"" + grantee.getIdentifier() + "\"");
+                    }
+                    request.setHeader(Permission.getHeaderName(permission), granteeString.ToString());
+                }
+            }
+        } // end of addAclHeader
+
+    } // end of class KS3Client
 }

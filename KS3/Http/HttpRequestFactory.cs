@@ -10,11 +10,13 @@ using KS3.Internal;
 
 namespace KS3.Http
 {
-    public class HttpRequestFactory
+    public static class HttpRequestFactory
     {
-        private static String DEFAULT_ENCODING = "UTF-8";
-
-        public HttpWebRequest createHttpRequest<T>(Request<T> request, ClientConfiguration clientConfiguration, Uri redirectURI) where T : KS3Request
+        /**
+         * Creates an HttpWebRequest based on the specified request and
+         * populates any parameters, headers, etc. from the original request.
+         */
+        public static HttpWebRequest createHttpRequest<T>(Request<T> request, ClientConfiguration clientConfiguration) where T : KS3Request
         {
             Uri endpoint = request.getEndpoint();
             String uri = endpoint.ToString();
@@ -29,8 +31,20 @@ namespace KS3.Http
             }
             else if (!uri.EndsWith("/")) uri += "/";
 
-            String encodedParams = this.encodeParameters(request);
-            uri += encodedParams;
+            String encodedParams = encodeParameters(request);
+
+            /*
+             * For all non-POST requests, and any POST requests that already have a
+             * payload, we put the encoded params directly in the URI, otherwise,
+             * we'll put them in the POST request's payload.
+             */;
+            bool putParamsInUri = request.getHttpMethod() != HttpMethod.POST || request.getContent() != null;
+            
+            if (encodedParams != null && putParamsInUri)
+                uri += "?" + encodedParams;
+
+            if (request.getHttpMethod() == HttpMethod.POST && encodedParams!=null && !putParamsInUri)
+                request.setContent(new MemoryStream(Constants.DEFAULT_ENCODING.GetBytes(encodedParams)));
 
             HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(uri);
             httpRequest.Method = request.getHttpMethod().ToString();
@@ -67,30 +81,29 @@ namespace KS3.Http
          * Creates an encoded query string from all the parameters in the specified
          * request.
          */
-        private String encodeParameters<T>(Request<T> request) where T : KS3Request
+        private static String encodeParameters<T>(Request<T> request) where T : KS3Request
         {
+            if (request.getParameters().Count == 0)
+                return null;
+
             StringBuilder builder = new StringBuilder();
-            char separator = '?';
+            bool first = true;
+            char separator = '&';
 
             foreach (String name in request.getParameters().Keys)
             {
                 String value = request.getParameters()[name];
-                builder.Append(separator);
+                if (!first) builder.Append(separator);
+                else first = false;
                 builder.Append(name + (value != null ? ("=" + value) : ""));
-
-                separator = '&';
             }
 
             return builder.ToString();
         }
 
         /** Configures the headers in the specified HTTP request. */
-        private void configureHeaders<T>(HttpWebRequest httpRequest, Request<T> request, ClientConfiguration clientConfiguration) where T : KS3Request
+        private static void configureHeaders<T>(HttpWebRequest httpRequest, Request<T> request, ClientConfiguration clientConfiguration) where T : KS3Request
         {
-            //Uri endpoint = request.getEndpoint();
-            //String hostHeader = endpoint.Host;
-            //httpRequest.Host = hostHeader;
-
             // Copy over any other headers already in our request
             foreach (String name in request.getHeaders().Keys)
             {

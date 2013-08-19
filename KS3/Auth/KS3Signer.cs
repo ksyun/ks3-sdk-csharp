@@ -35,12 +35,12 @@ namespace KS3.Auth
         public void sign(Request<T> request, KS3Credentials credentials)
         {
             String date = SignerUtils.getSignatrueDate(request.getTimeOffset());
-            request.addHeader(Headers.DATE, date);
+            request.setHeader(Headers.DATE, date);
 
             String canonicalString = RestUtils.makeKS3CanonicalString(httpVerb, resourcePath, request, null);
 
             String signature = SignerUtils.base64(SignerUtils.hmac_sha1(credentials.getKS3SecretKey(), canonicalString));
-            request.addHeader("Authorization", "KSS " + credentials.getKS3AccessKeyId() + ":" + signature);
+            request.setHeader("Authorization", "KSS " + credentials.getKS3AccessKeyId() + ":" + signature);
         }
 
     }
