@@ -114,7 +114,7 @@ namespace KS3Sample
 			{
 				Console.WriteLine("--- List Buckets: ---");
 
-				List<Bucket> bucketsList = ks3Client.listBuckets();
+				IList<Bucket> bucketsList = ks3Client.listBuckets();
 				foreach (Bucket b in bucketsList)
 				{
 					Console.WriteLine(b.ToString());
@@ -148,12 +148,10 @@ namespace KS3Sample
 			{
 				Console.WriteLine(e.ToString());
 				return false;
-
 			}
 
 			return true;
 		}
-
 
 		private static bool setBucketACL()
 		{
@@ -267,7 +265,6 @@ namespace KS3Sample
 
             return true;
         }
-
 
         private static bool setObjectACL()
         {

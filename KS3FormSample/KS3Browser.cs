@@ -19,7 +19,7 @@ namespace KS3FormSample
     {
         static String accessKey = "YOUR ACCESS KEY";
         static String secretKey = "YOUR SECRET KEY";
-
+        
         // KS3 Operation class 
         static KS3Client ks3Client = null;
 
@@ -51,7 +51,7 @@ namespace KS3FormSample
                 this.bucketBox.Items.Add(this.defaultBucketItem);
                 this.bucketBox.SelectedIndex = 0;
 
-                List<Bucket> bucketList = ks3Client.listBuckets();
+                IList<Bucket> bucketList = ks3Client.listBuckets();
                 foreach (Bucket bucket in bucketList)
                     this.bucketBox.Items.Add(new BucketItem(bucket.getName()));
             }
@@ -104,9 +104,9 @@ namespace KS3FormSample
         {
             ObjectListing objList = ks3Client.listObjects(bucketName);
 
-            List<KS3ObjectSummary> summaryList = objList.getObjectSummaries();
+            IList<ObjectSummary> summaryList = objList.getObjectSummaries();
             
-            foreach (KS3ObjectSummary summary in summaryList)
+            foreach (ObjectSummary summary in summaryList)
             {
                 String[] row = new string[] {
                     summary.getKey(),
@@ -347,7 +347,7 @@ namespace KS3FormSample
                 {
                     showMessage(e.ToString(), "错误");
                 }
-                catch (InterruptedException e)
+                catch (ProgressInterruptedException e)
                 { 
                     // Do nothing here ...
                 }
@@ -514,7 +514,7 @@ namespace KS3FormSample
                 {
                     showMessage(e.ToString(), "错误");
                 }
-                catch (InterruptedException e)
+                catch (ProgressInterruptedException e)
                 {
                     // Do nothing here ...
                 }
